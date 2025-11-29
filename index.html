@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Finder</title>
+</head>
+
+<body>
+
+    <form id="movieForm">
+        <!-- Tabs für Suchmodus -->
+        <div class="tabs">
+            <button type="button" id="titleTab">Filmtitel</button>
+            <button type="button" id="genreTab">Genre & Jahr</button>
+        </div>
+                <!-- type button wird verwenden, weil es ohne diesen ein submit knopf wäre, der das formular abschickt -->
+
+
+        <!-- Filmtitel-Suche -->
+        <div id="titleSearch">
+            <label for="titleInput">Filmtitel:</label>
+            <input type="text" id="titleInput" placeholder="Filmtitel eingeben">
+            <span class="error" id="titleError"></span>
+        </div>
+
+        <!-- Genre & Jahr-Suche -->
+        <div id="genreSearch" style="display:none;">
+            <label for="genreSelect">Genre:</label>
+            <select id="genreSelect">
+                <option value="">--Genre wählen--</option>
+                <option value="action">Action</option>
+                <option value="comedy">Comedy</option>
+                <option value="drama">Drama</option>
+            </select>
+
+            <label for="yearFrom">Von:</label>
+            <input type="number" id="yearFrom" placeholder="z.B. 2000">
+            <label for="yearTo">Bis:</label>
+            <input type="number" id="yearTo" placeholder="z.B. 2025">
+
+            <span class="error" id="genreError"></span>
+        </div>
+
+        <button type="submit">Suchen</button>
+    </form>
+
+
+
+
+<script src="script.js" defer></script>
+
+</body>
+
+</html>
+
+
+
+
+s
+
+
+
+
+
+
+
+
