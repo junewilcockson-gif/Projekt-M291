@@ -6,14 +6,12 @@ document.getElementById('kriterienBtn').addEventListener('click', function() {
     const steps = [
         { label: 'Schauspieler', type: 'text', id: 'actorInput', placeholder: 'Schauspieler eingeben...' },
         { label: 'Genre', type: 'select', id: 'genreSelect', options: ['Wähle Genre'] },
-        { label: 'Jahr von', type: 'number', id: 'yearFrom', min: 1900, max: 2100 },
-        { label: 'Jahr bis', type: 'number', id: 'yearTo', min: 1900, max: 2100 },
+        { label: 'Jahr', type: 'range', id: 'year', fromId: 'yearFrom', toId: 'yearTo', min: 1900, max: 2100 },
         { label: 'Film oder Serie?', type: 'select', id: 'typeSelect', options: ['Wähle Typ'] }
     ];
 
     let currentStep = 0;
 
-    // Einen einzigen Button erstellen
     const actionBtn = document.createElement('button');
     actionBtn.type = 'button';
     actionBtn.style.display = 'block';
@@ -28,42 +26,89 @@ document.getElementById('kriterienBtn').addEventListener('click', function() {
         label.textContent = step.label + ': ';
         div.appendChild(label);
 
-        let input;
         if (step.type === 'select') {
-            input = document.createElement('select');
+            const input = document.createElement('select');
             input.id = step.id;
             step.options.forEach(opt => {
                 const option = document.createElement('option');
                 option.textContent = opt;
                 input.appendChild(option);
             });
+            div.appendChild(input);
+        } else if (step.type === 'range' && step.fromId && step.toId) {
+            const fromInput = document.createElement('input');
+            fromInput.type = 'range';
+            fromInput.id = step.fromId;
+            fromInput.min = step.min;
+            fromInput.max = step.max;
+            fromInput.value = step.min;
+
+            const toInput = document.createElement('input');
+            toInput.type = 'range';
+            toInput.id = step.toId;
+            toInput.min = step.min;
+            toInput.max = step.max;
+            toInput.value = step.max;
+
+            const fromLabel = document.createElement('span');
+            fromLabel.textContent = 'Von: ';
+            fromLabel.style.marginRight = '5px';
+
+            const fromValue = document.createElement('span');
+            fromValue.textContent = fromInput.value; 
+            fromValue.style.marginRight = '15px';
+
+            const toLabel = document.createElement('span');
+            toLabel.textContent = 'Bis: ';
+            toLabel.style.margin = '0 5px 0 0';
+
+            const toValue = document.createElement('span');
+            toValue.textContent = toInput.value; 
+
+            // Eventlistener für live-Anzeige
+            fromInput.addEventListener('input', () => {
+                fromValue.textContent = fromInput.value;
+            });
+
+            toInput.addEventListener('input', () => {
+                toValue.textContent = toInput.value;
+            });
+
+            const container = document.createElement('div');
+            container.style.display = 'flex';
+            container.style.justifyContent = 'center';
+            container.style.alignItems = 'center';
+            container.appendChild(fromLabel);
+            container.appendChild(fromInput);
+            container.appendChild(fromValue);
+            container.appendChild(toLabel);
+            container.appendChild(toInput);
+            container.appendChild(toValue);
+
+            div.appendChild(container);
         } else {
-            input = document.createElement('input');
+            const input = document.createElement('input');
             input.type = step.type;
             input.id = step.id;
             if (step.placeholder) input.placeholder = step.placeholder;
             if (step.min) input.min = step.min;
             if (step.max) input.max = step.max;
+            div.appendChild(input);
         }
-        div.appendChild(input);
 
-        // Button immer ans Ende setzen
         form.insertBefore(div, actionBtn);
     }
 
-    // Erstes Feld direkt anzeigen
     addField(steps[currentStep]);
     currentStep++;
 
-    // Button klick-Event
     actionBtn.addEventListener('click', function() {
         if (currentStep < steps.length - 1) {
             addField(steps[currentStep]);
             currentStep++;
         } else if (currentStep === steps.length - 1) {
-            // Letztes Feld hinzufügen
             addField(steps[currentStep]);
-            // Button zu Suchen ändern
+
             const searchBtn = document.createElement('button');
             searchBtn.type = 'button';
             searchBtn.textContent = 'Suchen';
