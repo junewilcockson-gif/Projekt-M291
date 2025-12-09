@@ -7,12 +7,58 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Wie willst du suchen?</h1>
     <form id="searchForm">
-        <button type="button" id="filmtitelBtn">Filmtitel</button>
-        <button type="button" id="kriterienBtn">Kriterien</button>
+        <!-- Start Section: Auswahl Art der Suche -->
+        <section id="startSection">
+            <h1>Wie willst du suchen?</h1>
+            <button type="button" id="filmtitelBtn">Filmtitel</button>
+            <button type="button" id="kriterienBtn">Kriterien</button>
+        </section>
 
+        <!-- Filmtitel Suche Section -->
+        <section id="filmtitelSection" style="display:none;">
+            <h1>Suche nach Filmtitel</h1>
+            <label for="filmtitelInput">Filmtitel: </label>
+            <input type="text" id="filmtitelInput" placeholder="Filmtitel eingeben...">
+            <button type="button" id="filmtitelSearchBtn">Suchen</button>
+        </section>
+
+        <!-- Kriterien Suche Section -->
+        <section id="kriterienSection" style="display:none;">
+            <h1>Suche nach Kriterien</h1>
+
+            <div id="actorDiv" class="fieldDiv">
+                <label for="actorInput">Schauspieler: </label>
+                <input type="text" id="actorInput" placeholder="Schauspieler eingeben...">
+            </div>
+
+            <div id="genreDiv" class="fieldDiv">
+                <label for="genreSelect">Genre: </label>
+                <select id="genreSelect">
+                    <option>Wähle Genre</option>
+                </select>
+            </div>
+
+            <div id="yearDiv" class="fieldDiv">
+                <label>Jahr: </label>
+                <span>Von: </span><input type="range" id="yearFrom" min="1900" max="2100" value="1900">
+                <span id="yearFromValue">1900</span>
+                <span>Bis: </span><input type="range" id="yearTo" min="1900" max="2100" value="2100">
+                <span id="yearToValue">2100</span>
+            </div>
+
+            <div id="typeDiv" class="fieldDiv">
+                <label for="typeSelect">Film oder Serie?: </label>
+                <select id="typeSelect">
+                    <option>Wähle Typ</option>
+                </select>
+            </div>
+
+            <button type="button" id="kriterienNextBtn">Weiter</button>
+            <button type="button" id="kriterienSearchBtn" style="display:none;">Suchen</button>
+        </section>
     </form>
+
     <script src="script.js"></script>
 </body>
 </html>
