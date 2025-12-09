@@ -47,8 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Weiter Button anzeigen oder Suchen Button
         if (stepIndex < kriterienFields.length - 1) {
-            kriterienNextBtn.style.display = 'inline-block';
-            kriterienNextBtn.textContent = 'Skip';
+            kriterienNextBtn.style.display = 'none';
             kriterienSearchBtn.style.display = 'none';
         } else {
             kriterienNextBtn.style.display = 'none';
@@ -56,12 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    kriterienNextBtn.addEventListener('click', () => {
-        if (currentKriterienStep < kriterienFields.length - 1) {
-            currentKriterienStep++;
-            showKriterienStep(currentKriterienStep);
-        }
-    });
+    // Entferne den Eventlistener für kriterienNextBtn, da der Skip-Button nicht mehr benötigt wird
 
     kriterienSearchBtn.addEventListener('click', () => {
         // Felder referenzieren
@@ -144,11 +138,38 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    actorInput.addEventListener('input', removeKriterienError);
-    genreSelect.addEventListener('change', removeKriterienError);
-    typeSelect.addEventListener('change', removeKriterienError);
-    yearFrom.addEventListener('input', removeKriterienError);
-    yearTo.addEventListener('input', removeKriterienError);
+    actorInput.addEventListener('input', () => {
+        removeKriterienError();
+        if (currentKriterienStep === 0) {
+            currentKriterienStep++;
+            showKriterienStep(currentKriterienStep);
+        }
+    });
+    genreSelect.addEventListener('change', () => {
+        removeKriterienError();
+        if (currentKriterienStep === 1) {
+            currentKriterienStep++;
+            showKriterienStep(currentKriterienStep);
+        }
+    });
+    yearFrom.addEventListener('input', () => {
+        removeKriterienError();
+        if (currentKriterienStep === 2) {
+            currentKriterienStep++;
+            showKriterienStep(currentKriterienStep);
+        }
+    });
+    yearTo.addEventListener('input', () => {
+        removeKriterienError();
+        if (currentKriterienStep === 2) {
+            currentKriterienStep++;
+            showKriterienStep(currentKriterienStep);
+        }
+    });
+    typeSelect.addEventListener('change', () => {
+        removeKriterienError();
+        // No next step after last field
+    });
 
     function removeFilmtitelError() {
         filmtitelInput.style.borderColor = '';
