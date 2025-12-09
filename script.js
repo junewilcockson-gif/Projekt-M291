@@ -1,48 +1,81 @@
-document.getElementById('filmtitelBtn').addEventListener('click', function() {
-    document.querySelector('h1').textContent = 'Filmtitel';
-    document.getElementById('searchForm').innerHTML = '<input type="text" id="searchInput" placeholder="Suche nach Filmtitel..."><button type="button" id="confirmBtn" style="display:none;">Suchen</button><p id="warning" style="color: #FF3939; display:none;">Die Eingabe ist zu lang.</p>';
-    
-    document.getElementById('searchInput').addEventListener('input', function() {
-        document.getElementById('confirmBtn').style.display = 'inline-block';
-        document.getElementById('warning').style.display = 'none';
-        document.getElementById('warningIcon').style.display = 'none';
-    });
-    
-    document.getElementById('confirmBtn').addEventListener('click', function() {
-        if (document.getElementById('searchInput').value.length > 50) {
-            document.getElementById('warning').style.display = 'block';
-            if (!document.getElementById('warningIcon')) {
-                const icon = document.createElement('img');
-                icon.id = 'warningIcon';
-                icon.src = 'assets/warnung.png';
-                icon.style.width = '5%';
-                icon.style.height = 'auto';
-                icon.style.display = 'block';
-                icon.style.margin = '0 auto';
-                icon.alt = 'Warnung';
-                document.getElementById('searchForm').appendChild(icon);
-            }
-            document.getElementById('warningIcon').style.display = 'block';
-        } else {
-            // Perform search or something
-            alert('Suche durchgeführt');
-        }
-    });
-});
-
 document.getElementById('kriterienBtn').addEventListener('click', function() {
+    const form = document.getElementById('searchForm');
+    form.innerHTML = '';
     document.querySelector('h1').textContent = 'Suche nach Kriterien';
-    document.getElementById('searchForm').innerHTML = '<label for="actorInput">Schauspieler</label><input type="text" id="actorInput" pattern="[a-zA-Z ]*" maxlength="50" placeholder="Schauspieler eingeben..."><button type="button" id="skipActor">Skip</button>';
-    
-    document.getElementById('skipActor').addEventListener('click', function() {
-        document.getElementById('searchForm').innerHTML += '<br><label for="genreSelect">Genre</label><select id="genreSelect"><option value="">Wähle Genre</option></select><button type="button" id="skipGenre">Skip</button>';
-        
-        document.getElementById('skipGenre').addEventListener('click', function() {
-            document.getElementById('searchForm').innerHTML += '<br><label>Jahr</label><label for="yearFrom">von</label><input type="number" id="yearFrom" min="1900" max="2100" step="1"><label for="yearTo">bis</label><input type="number" id="yearTo" min="1900" max="2100" step="1"><button type="button" id="skipYear">Skip</button>';
-            
-            document.getElementById('skipYear').addEventListener('click', function() {
-                document.getElementById('searchForm').innerHTML += '<br><label for="typeSelect">Film oder Serie?</label><select id="typeSelect"><option value="">Wähle Typ</option></select>';
+
+    const steps = [
+        { label: 'Schauspieler', type: 'text', id: 'actorInput', placeholder: 'Schauspieler eingeben...' },
+        { label: 'Genre', type: 'select', id: 'genreSelect', options: ['Wähle Genre'] },
+        { label: 'Jahr von', type: 'number', id: 'yearFrom', min: 1900, max: 2100 },
+        { label: 'Jahr bis', type: 'number', id: 'yearTo', min: 1900, max: 2100 },
+        { label: 'Film oder Serie?', type: 'select', id: 'typeSelect', options: ['Wähle Typ'] }
+    ];
+
+    let currentStep = 0;
+
+    // Einen einzigen Button erstellen
+    const actionBtn = document.createElement('button');
+    actionBtn.type = 'button';
+    actionBtn.style.display = 'block';
+    actionBtn.style.margin = '10px auto';
+    actionBtn.textContent = 'Weiter';
+    form.appendChild(actionBtn);
+
+    function addField(step) {
+        const div = document.createElement('div');
+        div.style.marginBottom = '10px';
+        const label = document.createElement('label');
+        label.textContent = step.label + ': ';
+        div.appendChild(label);
+
+        let input;
+        if (step.type === 'select') {
+            input = document.createElement('select');
+            input.id = step.id;
+            step.options.forEach(opt => {
+                const option = document.createElement('option');
+                option.textContent = opt;
+                input.appendChild(option);
             });
-        });
+        } else {
+            input = document.createElement('input');
+            input.type = step.type;
+            input.id = step.id;
+            if (step.placeholder) input.placeholder = step.placeholder;
+            if (step.min) input.min = step.min;
+            if (step.max) input.max = step.max;
+        }
+        div.appendChild(input);
+
+        // Button immer ans Ende setzen
+        form.insertBefore(div, actionBtn);
+    }
+
+    // Erstes Feld direkt anzeigen
+    addField(steps[currentStep]);
+    currentStep++;
+
+    // Button klick-Event
+    actionBtn.addEventListener('click', function() {
+        if (currentStep < steps.length - 1) {
+            addField(steps[currentStep]);
+            currentStep++;
+        } else if (currentStep === steps.length - 1) {
+            // Letztes Feld hinzufügen
+            addField(steps[currentStep]);
+            // Button zu Suchen ändern
+            const searchBtn = document.createElement('button');
+            searchBtn.type = 'button';
+            searchBtn.textContent = 'Suchen';
+            searchBtn.style.display = 'block';
+            searchBtn.style.margin = '10px auto';
+            form.replaceChild(searchBtn, actionBtn);
+
+            searchBtn.addEventListener('click', function() {
+                alert('Suche durchgeführt!');
+            });
+
+            currentStep++;
+        }
     });
 });
