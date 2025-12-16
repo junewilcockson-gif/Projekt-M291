@@ -45,17 +45,23 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.display = i <= stepIndex ? 'block' : 'none';
         });
 
-        // Weiter Button anzeigen oder Suchen Button
-        if (stepIndex < kriterienFields.length - 1) {
-            kriterienNextBtn.style.display = 'none';
-            kriterienSearchBtn.style.display = 'none';
-        } else {
-            kriterienNextBtn.style.display = 'none';
-            kriterienSearchBtn.style.display = 'inline-block';
-        }
+        // Positioniere den Skip-Button unter dem aktuell untersten sichtbaren Feld
+      if (stepIndex < kriterienFields.length - 1) {
+    kriterienNextBtn.style.display = 'inline-block';
+    kriterienSearchBtn.style.display = 'none';
+} else {
+    kriterienNextBtn.style.display = 'none';
+    kriterienSearchBtn.style.display = 'inline-block';
+}
     }
 
-    // Entferne den Eventlistener für kriterienNextBtn, da der Skip-Button nicht mehr benötigt wird
+    // Skip-Button klick Event: nächstes Feld anzeigen, auch wenn das aktuelle leer ist
+    kriterienNextBtn.addEventListener('click', () => {
+        if (currentKriterienStep < kriterienFields.length - 1) {
+            currentKriterienStep++;
+            showKriterienStep(currentKriterienStep);
+        }
+    });
 
     kriterienSearchBtn.addEventListener('click', () => {
         // Felder referenzieren
@@ -79,6 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         errorDiv.textContent = '';
 
+        // Entferne Warnungsbild falls vorhanden
+        let warnImg = document.getElementById('kriterienWarnImg');
+        if (warnImg) {
+            warnImg.remove();
+        }
+
         // Validierung: mindestens ein Kriterium ausgefüllt
         const isActor = actorInput.value.trim() !== '';
         const isGenre = genreSelect.value !== 'Wähle Genre';
@@ -88,11 +100,44 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isActor && !isGenre && !isType && !isYear) {
             [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = 'red');
             errorDiv.textContent = 'Wähle mindestens ein Kriterium.';
+
+            // Warnungsbild hinzufügen
+            if (!warnImg) {
+                warnImg = document.createElement('img');
+                warnImg.id = 'kriterienWarnImg';
+                warnImg.src = 'assets/warnung.png';
+                warnImg.style.maxWidth = '30px';
+                warnImg.style.marginLeft = '8px';
+                warnImg.style.verticalAlign = 'middle';
+                errorDiv.appendChild(warnImg);
+            }
             return;
+        }
+
+        // Neue Regex-Validierung für actorInput, falls ausgefüllt
+        if (isActor) {
+            const actorRegex = /^[a-zA-ZäöüÄÖÜß\s\-'.]+$/;
+            if (!actorRegex.test(actorInput.value.trim())) {
+                actorInput.style.borderColor = 'red';
+                errorDiv.textContent = 'Bitte gib einen gültigen Namen ein.';
+                if (!warnImg) {
+                    warnImg = document.createElement('img');
+                    warnImg.id = 'kriterienWarnImg';
+                    warnImg.src = 'assets/warnung.png';
+                    warnImg.style.maxWidth = '30px';
+                    warnImg.style.marginLeft = '8px';
+                    warnImg.style.verticalAlign = 'middle';
+                    errorDiv.appendChild(warnImg);
+                }
+                return;
+            }
         }
 
         // Validierung OK: Fehlermeldung entfernen, Alert ausgeben
         errorDiv.textContent = '';
+        if (warnImg) {
+            warnImg.remove();
+        }
         alert('Suche durchgeführt!');
     });
 
@@ -113,14 +158,51 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         errorDiv.textContent = '';
 
+        // Entferne Warnungsbild falls vorhanden
+        let warnImg = document.getElementById('filmtitelWarnImg');
+        if (warnImg) {
+            warnImg.remove();
+        }
+
         if (filmtitelInput.value.trim() === '') {
             filmtitelInput.style.borderColor = 'red';
             errorDiv.textContent = 'Bitte gib einen Filmtitel ein.';
+
+            // Warnungsbild hinzufügen
+            if (!warnImg) {
+                warnImg = document.createElement('img');
+                warnImg.id = 'filmtitelWarnImg';
+                warnImg.src = 'assets/warnung.png';
+                warnImg.style.maxWidth = '30px';
+                warnImg.style.marginLeft = '8px';
+                warnImg.style.verticalAlign = 'middle';
+                errorDiv.appendChild(warnImg);
+            }
+            return;
+        }
+
+        // Neue Regex-Validierung für Filmtitel
+        const filmtitelRegex = /^[a-zA-Z0-9äöüÄÖÜß\s\-':,\.!&()]+$/;
+        if (!filmtitelRegex.test(filmtitelInput.value.trim())) {
+            filmtitelInput.style.borderColor = 'red';
+            errorDiv.textContent = 'Bitte gib einen gültigen Filmtitel ein.';
+            if (!warnImg) {
+                warnImg = document.createElement('img');
+                warnImg.id = 'filmtitelWarnImg';
+                warnImg.src = 'assets/warnung.png';
+                warnImg.style.maxWidth = '30px';
+                warnImg.style.marginLeft = '8px';
+                warnImg.style.verticalAlign = 'middle';
+                errorDiv.appendChild(warnImg);
+            }
             return;
         }
 
         // Validierung OK: Fehlermeldung entfernen, Alert ausgeben
         errorDiv.textContent = '';
+        if (warnImg) {
+            warnImg.remove();
+        }
         alert('Suche nach Filmtitel durchgeführt!');
     });
 
@@ -135,6 +217,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorDiv = document.getElementById('kriterienError');
         if (errorDiv) {
             errorDiv.textContent = '';
+            let warnImg = document.getElementById('kriterienWarnImg');
+            if (warnImg) {
+                warnImg.remove();
+            }
         }
     }
 
@@ -176,6 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorDiv = document.getElementById('filmtitelError');
         if (errorDiv) {
             errorDiv.textContent = '';
+            let warnImg = document.getElementById('filmtitelWarnImg');
+            if (warnImg) {
+                warnImg.remove();
+            }
         }
     }
 
