@@ -16,6 +16,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const yearFromValue = document.getElementById('yearFromValue');
     const yearToValue = document.getElementById('yearToValue');
 
+    // Prepare for API usage: clear genreSelect and typeSelect options
+    const genreSelect = document.getElementById('genreSelect');
+    const typeSelect = document.getElementById('typeSelect');
+    genreSelect.innerHTML = '';
+    typeSelect.innerHTML = '';
+
+    // Add div for filmtitel suggestions below filmtitelInput
+    const filmtitelInput = document.getElementById('filmtitelInput');
+    let filmtitelSuggestions = document.getElementById('filmtitelSuggestions');
+    if (!filmtitelSuggestions) {
+        filmtitelSuggestions = document.createElement('div');
+        filmtitelSuggestions.id = 'filmtitelSuggestions';
+        filmtitelInput.insertAdjacentElement('afterend', filmtitelSuggestions);
+    }
+
+    // Add div for kriterien results below kriterienSearchBtn
+    let kriterienResults = document.getElementById('kriterienResults');
+    if (!kriterienResults) {
+        kriterienResults = document.createElement('div');
+        kriterienResults.id = 'kriterienResults';
+        kriterienSearchBtn.insertAdjacentElement('afterend', kriterienResults);
+    }
+
     // Live-Anzeige für Jahr Slider
     yearFrom.addEventListener('input', () => {
         yearFromValue.textContent = yearFrom.value;
@@ -66,10 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
     kriterienSearchBtn.addEventListener('click', () => {
         // Felder referenzieren
         const actorInput = document.getElementById('actorInput');
-        const genreSelect = document.getElementById('genreSelect');
-        const typeSelect = document.getElementById('typeSelect');
-        const yearFrom = document.getElementById('yearFrom');
-        const yearTo = document.getElementById('yearTo');
+        // const genreSelect = document.getElementById('genreSelect'); // already defined above
+        // const typeSelect = document.getElementById('typeSelect'); // already defined above
+        // const yearFrom = document.getElementById('yearFrom'); // already defined above
+        // const yearTo = document.getElementById('yearTo'); // already defined above
 
         // Fehleranzeige zurücksetzen
         [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = '');
@@ -116,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Neue Regex-Validierung für actorInput, falls ausgefüllt
         if (isActor) {
-            const actorRegex = /^[a-zA-ZäöüÄÖÜß\s\-'.]+$/;
+            const actorRegex = /^[a-zA-ZäöüÄÖÜß]+(?:[ '-][a-zA-ZäöüÄÖÜß]+)*$/;
             if (!actorRegex.test(actorInput.value.trim())) {
                 actorInput.style.borderColor = 'red';
                 errorDiv.textContent = 'Bitte gib einen gültigen Namen ein.';
@@ -142,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     filmtitelSearchBtn.addEventListener('click', () => {
-        const filmtitelInput = document.getElementById('filmtitelInput');
+        // const filmtitelInput = document.getElementById('filmtitelInput'); // already defined above
 
         // Fehleranzeige zurücksetzen
         filmtitelInput.style.borderColor = '';
@@ -166,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (filmtitelInput.value.trim() === '') {
             filmtitelInput.style.borderColor = 'red';
-            errorDiv.textContent = 'Bitte gib einen Filmtitel ein.';
+            errorDiv.textContent = 'Bitte gib einen gültigen Filmtitel ein.';
 
             // Warnungsbild hinzufügen
             if (!warnImg) {
@@ -182,10 +205,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Neue Regex-Validierung für Filmtitel
-        const filmtitelRegex = /^[a-zA-Z0-9äöüÄÖÜß\s\-':,\.!&()]+$/;
+        const filmtitelRegex = /^(?=.*[a-zA-Z0-9äöüÄÖÜß])[a-zA-Z0-9äöüÄÖÜß\s.,'!?:&()\-]+$/;
         if (!filmtitelRegex.test(filmtitelInput.value.trim())) {
             filmtitelInput.style.borderColor = 'red';
             errorDiv.textContent = 'Bitte gib einen gültigen Filmtitel ein.';
+
+            // Warnungsbild hinzufügen
             if (!warnImg) {
                 warnImg = document.createElement('img');
                 warnImg.id = 'filmtitelWarnImg';
@@ -208,9 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ergänzung: Eventlistener für input und change auf alle Formularfelder
     const actorInput = document.getElementById('actorInput');
-    const genreSelect = document.getElementById('genreSelect');
-    const typeSelect = document.getElementById('typeSelect');
-    const filmtitelInput = document.getElementById('filmtitelInput');
+    // genreSelect and typeSelect already defined above
+    // filmtitelInput already defined above
 
     function removeKriterienError() {
         [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = '');

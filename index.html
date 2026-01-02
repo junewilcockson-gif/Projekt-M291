@@ -13,37 +13,34 @@
     </section>
 
     <section id="filmtitelSection" style="display:none;">
-        <input type="text" id="filmtitelInput" placeholder="Filmtitel eingeben" />
+        <input type="text" id="filmtitelInput" placeholder="Filmtitel"/>
         <button id="filmtitelSearchBtn">Suchen</button>
     </section>
 
     <section id="kriterienSection" style="display:none;">
         <div id="actorDiv">
             <label for="actorInput">Schauspieler:</label>
-            <input type="text" id="actorInput" />
+            <input type="text" id="actorInput" placeholder="Name"/>
+
         </div>
         <div id="genreDiv" style="display:none;">
             <label for="genreSelect">Genre:</label>
             <select id="genreSelect">
                 <option>Wähle Genre</option>
-                <option>Action</option>
-                <option>Comedy</option>
             </select>
         </div>
         <div id="yearDiv" style="display:none;">
             <label for="yearFrom">Jahr von:</label>
-            <input type="range" id="yearFrom" min="1900" max="2024" value="1900" />
+            <input type="range" id="yearFrom" min="1900" max="2026" value="1900" />
             <span id="yearFromValue">1900</span>
             <label for="yearTo">Jahr bis:</label>
-            <input type="range" id="yearTo" min="1900" max="2024" value="2024" />
-            <span id="yearToValue">2024</span>
+            <input type="range" id="yearTo" min="1900" max="2026" value="2026" />
+            <span id="yearToValue">2026</span>
         </div>
         <div id="typeDiv" style="display:none;">
             <label for="typeSelect">Typ:</label>
             <select id="typeSelect">
                 <option>Wähle Typ</option>
-                <option>Film</option>
-                <option>Serie</option>
             </select>
         </div>
         <button id="kriterienNextBtn" style="display:none;">skip</button>
