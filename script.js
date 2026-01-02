@@ -86,6 +86,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // API Key for TheMovieDB (nur eine zentrale Variable)
+    const apiKey = '47c4ec1ddf8bc5518dcacb259d6bcbcb';
+
+    // Genre-Liste dynamisch laden (wird auch bei Typwechsel neu geladen)
+    async function loadGenres(type) {
+        genreSelect.innerHTML = '';
+        genreSelect.disabled = true;
+        let url = '';
+        if (type === 'tv') {
+            url = `https://api.themoviedb.org/3/genre/tv/list?api_key=${apiKey}&language=de-DE`;
+        } else {
+            url = `https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=de-DE`;
+        }
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('Genres konnten nicht geladen werden.');
+            const data = await resp.json();
+            genreSelect.innerHTML = '<option value="">Wähle Genre</option>';
+            if (data.genres && Array.isArray(data.genres)) {
+                data.genres.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    opt.textContent = g.name;
+                    genreSelect.appendChild(opt);
+                });
+            }
+            genreSelect.disabled = false;
+        } catch (e) {
+            genreSelect.innerHTML = '<option value="">Genres nicht verfügbar</option>';
+            genreSelect.disabled = true;
+        }
+    }
+
+    // Typ-Auswahl initialisieren und Listener für dynamische Genre-Liste
+    typeSelect.innerHTML = '';
+    typeSelect.appendChild(new Option('Wähle Typ', ''));
+    typeSelect.appendChild(new Option('Film', 'movie'));
+    typeSelect.appendChild(new Option('Serie', 'tv'));
+    typeSelect.value = '';
+    typeSelect.addEventListener('change', () => {
+        const val = typeSelect.value || 'movie';
+        loadGenres(val);
+    });
+    // Initial einmal laden (default: movie)
+    loadGenres('movie');
+
     kriterienSearchBtn.addEventListener('click', () => {
         // Felder referenzieren
         const actorInput = document.getElementById('actorInput');
@@ -116,8 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Validierung: mindestens ein Kriterium ausgefüllt
         const isActor = actorInput.value.trim() !== '';
-        const isGenre = genreSelect.value !== 'Wähle Genre';
-        const isType = typeSelect.value !== 'Wähle Typ';
+        const isGenre = genreSelect.value !== '' && !genreSelect.disabled;
+        const isType = typeSelect.value !== '';
         const isYear = yearFrom.value !== yearFrom.min || yearTo.value !== yearTo.max;
 
         if (!isActor && !isGenre && !isType && !isYear) {
@@ -161,7 +207,80 @@ document.addEventListener('DOMContentLoaded', () => {
         if (warnImg) {
             warnImg.remove();
         }
-        alert('Suche durchgeführt!');
+
+        // Dynamische Endpunktwahl für discover/movie oder discover/tv
+        let endpoint = 'movie';
+        if (isType && typeSelect.value === 'tv') endpoint = 'tv';
+        let params = {
+            api_key: apiKey,
+            language: 'de-DE',
+            sort_by: 'popularity.desc',
+            include_adult: 'false',
+            include_video: 'false',
+            page: 1
+        };
+        if (isGenre) params.with_genres = genreSelect.value;
+        if (isYear) {
+            if (yearFrom.value !== '') {
+                params[endpoint === 'movie' ? 'primary_release_date.gte' : 'first_air_date.gte'] = `${yearFrom.value}-01-01`;
+            }
+            if (yearTo.value !== '') {
+                params[endpoint === 'movie' ? 'primary_release_date.lte' : 'first_air_date.lte'] = `${yearTo.value}-12-31`;
+            }
+        }
+        // Fehlerbehandlung
+        function handleHTTPError(response) {
+            if (!response.ok) {
+                let msg = '';
+                switch (response.status) {
+                    case 401: msg = 'Fehler 401: Ungültiger API-Schlüssel.'; break;
+                    case 404: msg = 'Fehler 404: Nicht gefunden.'; break;
+                    default: msg = `Fehler ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(msg);
+            }
+            return response;
+        }
+        async function fetchWithKriterien() {
+            kriterienResults.innerHTML = '';
+            try {
+                let finalParams = { ...params };
+                if (isActor) {
+                    let actorName = actorInput.value.trim();
+                    let personUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(actorName)}`;
+                    let resp = await fetch(personUrl);
+                    handleHTTPError(resp);
+                    let data = await resp.json();
+                    if (!data || !Array.isArray(data.results) || data.results.length === 0) {
+                        throw new Error('Schauspieler nicht gefunden.');
+                    }
+                    let actorId = data.results[0].id;
+                    finalParams.with_cast = actorId;
+                }
+                let finalUrl = new URL(`https://api.themoviedb.org/3/discover/${endpoint}`);
+                Object.keys(finalParams).forEach(key => finalUrl.searchParams.append(key, finalParams[key]));
+                let resp2 = await fetch(finalUrl);
+                handleHTTPError(resp2);
+                let data2 = await resp2.json();
+                if (!data2 || !Array.isArray(data2.results)) {
+                    kriterienResults.innerHTML = '<p>Ungültige oder leere Antwort erhalten.</p>';
+                    return;
+                }
+                if (data2.results.length > 0) {
+                    kriterienResults.innerHTML = '<ul>' + data2.results.map(item => {
+                        const title = item.title || item.name || 'Unbekannt';
+                        const date = (item.release_date || item.first_air_date || '').substring(0,4) || 'n/a';
+                        return `<li>${title} (${date})</li>`;
+                    }).join('') + '</ul>';
+                } else {
+                    kriterienResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
+                }
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                kriterienResults.innerHTML = '';
+            }
+        }
+        fetchWithKriterien();
     });
 
     filmtitelSearchBtn.addEventListener('click', () => {
@@ -186,6 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (warnImg) {
             warnImg.remove();
         }
+
+        filmtitelSuggestions.innerHTML = '';
 
         if (filmtitelInput.value.trim() === '') {
             filmtitelInput.style.borderColor = 'red';
@@ -223,19 +344,46 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Validierung OK: Fehlermeldung entfernen, Alert ausgeben
-        errorDiv.textContent = '';
-        if (warnImg) {
-            warnImg.remove();
+        // Suche nach Filmtitel (search/movie)
+        const query = filmtitelInput.value.trim();
+        const url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(query)}&page=1&include_adult=false`;
+        function handleHTTPError(response) {
+            if (!response.ok) {
+                let msg = '';
+                switch (response.status) {
+                    case 401: msg = 'Fehler 401: Ungültiger API-Schlüssel.'; break;
+                    case 404: msg = 'Fehler 404: Nicht gefunden.'; break;
+                    default: msg = `Fehler ${response.status}: ${response.statusText}`;
+                }
+                throw new Error(msg);
+            }
+            return response;
         }
-        alert('Suche nach Filmtitel durchgeführt!');
+        filmtitelSuggestions.innerHTML = '';
+        fetch(url)
+            .then(handleHTTPError)
+            .then(response => response.json())
+            .then(data => {
+                if (!data || !Array.isArray(data.results)) {
+                    filmtitelSuggestions.innerHTML = '<p>Ungültige oder leere Antwort erhalten.</p>';
+                    return;
+                }
+                if (data.results.length > 0) {
+                    filmtitelSuggestions.innerHTML = '<ul>' + data.results.map(movie =>
+                        `<li>${movie.title} (${movie.release_date ? movie.release_date.substring(0,4) : 'n/a'})</li>`
+                    ).join('') + '</ul>';
+                } else {
+                    filmtitelSuggestions.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
+                }
+            })
+            .catch(error => {
+                errorDiv.textContent = error.message;
+                filmtitelSuggestions.innerHTML = '';
+            });
     });
 
     // Ergänzung: Eventlistener für input und change auf alle Formularfelder
     const actorInput = document.getElementById('actorInput');
-    // genreSelect and typeSelect already defined above
-    // filmtitelInput already defined above
-
     function removeKriterienError() {
         [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = '');
         const errorDiv = document.getElementById('kriterienError');
@@ -247,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
     actorInput.addEventListener('input', () => {
         removeKriterienError();
         if (currentKriterienStep === 0) {
@@ -280,7 +427,6 @@ document.addEventListener('DOMContentLoaded', () => {
         removeKriterienError();
         // No next step after last field
     });
-
     function removeFilmtitelError() {
         filmtitelInput.style.borderColor = '';
         const errorDiv = document.getElementById('filmtitelError');
@@ -292,6 +438,51 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
     filmtitelInput.addEventListener('input', removeFilmtitelError);
+
+    // Vorschläge beim Tippen: Filmtitel
+    filmtitelInput.addEventListener('input', async function() {
+        const query = filmtitelInput.value.trim();
+        filmtitelSuggestions.innerHTML = '';
+        if (query.length < 2) return;
+        try {
+            const url = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(query)}&page=1&include_adult=false`;
+            const resp = await fetch(url);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (data && Array.isArray(data.results) && data.results.length > 0) {
+                filmtitelSuggestions.innerHTML = '<ul>' + data.results.slice(0, 5).map(movie =>
+                    `<li>${movie.title} (${movie.release_date ? movie.release_date.substring(0,4) : 'n/a'})</li>`
+                ).join('') + '</ul>';
+            }
+        } catch(e) {
+            // Keine Vorschläge anzeigen
+        }
+    });
+
+    // Vorschläge beim Tippen: Schauspieler (actorInput)
+    let actorSuggestions = document.getElementById('actorSuggestions');
+    if (!actorSuggestions) {
+        actorSuggestions = document.createElement('div');
+        actorSuggestions.id = 'actorSuggestions';
+        actorInput.insertAdjacentElement('afterend', actorSuggestions);
+    }
+    actorInput.addEventListener('input', async function() {
+        const query = actorInput.value.trim();
+        actorSuggestions.innerHTML = '';
+        if (query.length < 2) return;
+        try {
+            const url = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(query)}`;
+            const resp = await fetch(url);
+            if (!resp.ok) return;
+            const data = await resp.json();
+            if (data && Array.isArray(data.results) && data.results.length > 0) {
+                actorSuggestions.innerHTML = '<ul>' + data.results.slice(0, 5).map(actor =>
+                    `<li>${actor.name}</li>`
+                ).join('') + '</ul>';
+            }
+        } catch(e) {
+            // Keine Vorschläge anzeigen
+        }
+    });
 });
