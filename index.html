@@ -8,12 +8,12 @@
 </head>
 <body>
     <section id="startSection">
-        <button id="filmtitelBtn">Filmtitel Suche</button>
+        <button id="filmtitelBtn">Suche nach Titel</button>
         <button id="kriterienBtn">Kriterien Suche</button>
     </section>
 
     <section id="filmtitelSection" style="display:none;">
-        <input type="text" id="filmtitelInput" placeholder="Filmtitel"/>
+        <input type="text" id="filmtitelInput" placeholder="Titel eingeben"/>
         <button id="filmtitelSearchBtn">Suchen</button>
     </section>
 
@@ -31,11 +31,11 @@
         </div>
         <div id="yearDiv" style="display:none;">
             <label for="yearFrom">Jahr von:</label>
-            <input type="range" id="yearFrom" min="1900" max="2026" value="1900" />
+            <input type="range" id="yearFrom" min="1900" max="2040" value="1900" />
             <span id="yearFromValue">1900</span>
             <label for="yearTo">Jahr bis:</label>
-            <input type="range" id="yearTo" min="1900" max="2026" value="2026" />
-            <span id="yearToValue">2026</span>
+            <input type="range" id="yearTo" min="1900" max="2040" value="2040" />
+            <span id="yearToValue">2040</span>
         </div>
         <div id="typeDiv" style="display:none;">
             <label for="typeSelect">Typ:</label>
