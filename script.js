@@ -400,7 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const el = document.getElementById(id);
             el.style.display = i <= stepIndex ? 'block' : 'none';
         });
-
         // Positioniere den Skip-Button unter dem aktuell untersten sichtbaren Feld
         if (stepIndex < kriterienFields.length - 1) {
             kriterienNextBtn.style.display = 'inline-block';
@@ -429,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Keine Bootstrap-Klasse!
     kriterienProgressBar.style.height = '100%';
     kriterienProgressBar.style.width = '0%';
-    kriterienProgressBar.style.background = '#555';
+    kriterienProgressBar.style.background = '#6c757d';
     kriterienProgressBar.style.transition = 'width 0.3s';
     kriterienProgressBarContainer.appendChild(kriterienProgressBar);
 
@@ -443,9 +442,10 @@ document.addEventListener('DOMContentLoaded', () => {
     kriterienProgressBarContainer.style.display = 'none';
 
     // Funktion zum Aktualisieren des Fortschrittsbalkens
-    function updateKriterienProgress(stepIndex) {
+    function updateKriterienProgress() {
         const totalSteps = kriterienFields.length;
-        const percent = Math.round(((stepIndex + 1) / totalSteps) * 100);
+        // Nur currentKriterienStep verwenden, nicht stepIndex-Parameter!
+        const percent = Math.round(((currentKriterienStep + 1) / totalSteps) * 100);
         kriterienProgressBar.style.width = percent + '%';
         // Keine aria-Attribute nötig, keine Bootstrap!
     }
@@ -454,18 +454,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const originalShowKriterienStep = showKriterienStep;
     showKriterienStep = function(stepIndex) {
         originalShowKriterienStep(stepIndex);
-        updateKriterienProgress(stepIndex);
+        updateKriterienProgress();
     };
 
     // Initialisieren beim ersten Schritt
-    updateKriterienProgress(currentKriterienStep);
+    updateKriterienProgress();
 
     // Skip-Button klick Event: nächstes Feld anzeigen, auch wenn das aktuelle leer ist
-    kriterienNextBtn.addEventListener('click', () => {
+    function nextKriterienStep() {
         if (currentKriterienStep < kriterienFields.length - 1) {
             currentKriterienStep++;
-            showKriterienStep(currentKriterienStep);
         }
+        updateKriterienProgress();
+    }
+    kriterienNextBtn.addEventListener('click', () => {
+        nextKriterienStep();
+        showKriterienStep(currentKriterienStep);
     });
 
     // API Key for TheMovieDB (nur eine zentrale Variable)
@@ -1208,34 +1212,36 @@ document.addEventListener('DOMContentLoaded', () => {
     actorInput.addEventListener('input', () => {
         removeKriterienError();
         if (currentKriterienStep === 0) {
-            currentKriterienStep++;
+            nextKriterienStep();
             showKriterienStep(currentKriterienStep);
         }
     });
     genreSelect.addEventListener('change', () => {
         removeKriterienError();
         if (currentKriterienStep === 1) {
-            currentKriterienStep++;
+            nextKriterienStep();
             showKriterienStep(currentKriterienStep);
         }
     });
     yearFrom.addEventListener('input', () => {
         removeKriterienError();
         if (currentKriterienStep === 2) {
-            currentKriterienStep++;
+            nextKriterienStep();
             showKriterienStep(currentKriterienStep);
         }
     });
     yearTo.addEventListener('input', () => {
         removeKriterienError();
         if (currentKriterienStep === 2) {
-            currentKriterienStep++;
+            nextKriterienStep();
             showKriterienStep(currentKriterienStep);
         }
     });
     typeSelect.addEventListener('change', () => {
         removeKriterienError();
-        // No next step after last field
+        // letzter Schritt explizit abschliessen
+        currentKriterienStep = kriterienFields.length - 1;
+        updateKriterienProgress();
     });
     function removeFilmtitelError() {
         filmtitelInput.style.borderColor = '';
@@ -1581,3 +1587,33 @@ function performSearch() {
   }
 }
 
+/*
+========================
+F5 – UX-Honigwabe (Notizen)
+========================
+
+✔ Sichtbarkeit
+- Lade-GIF bei API-Aufrufen zeigt, dass etwas passiert
+- Fortschrittsbalken bei der Kriterien-Suche zeigt den aktuellen Schritt
+- Ergebnisse werden klar als Karten dargestellt
+
+✔ Feedback
+- Rote Markierung bei fehlerhaften Eingaben
+- Warnmeldungen mit Text und Symbol
+- Sofortiges Feedback bei Klicks (Progressbar, Laden, Ergebnisse)
+
+✔ Navigation
+- Startseite mit klarer Wahl zwischen Sucharten
+- Schritt-für-Schritt-Führung bei der Kriterien-Suche
+- Detailansicht als Overlay, Rückkehr ohne Seitenwechsel
+
+✔ Zugänglichkeit & Zuverlässigkeit
+- Fehlermeldungen mit role="alert" für Screenreader
+- Klare Texte, einfache Sprache
+- Fehlertoleranz bei leeren oder fehlenden Daten
+
+✔ Begehrenswert & Wertvoll
+- Ansprechendes Kartenlayout mit Postern
+- Detailansicht mit zusätzlichen Infos
+- Einheitliches Design durch Bootstrap
+*/
