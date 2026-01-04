@@ -1123,9 +1123,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     filmtitelInput.addEventListener('input', removeFilmtitelError);
 
-    // Jahr-Inputs Bootstrap-Klasse
-    yearFrom.classList.add('form-control');
-    yearTo.classList.add('form-control');
+    // Jahr-Inputs Bootstrap-Klassen und Layout für Kriterien-Suche
+    // Remove unwanted Bootstrap border for sliders, only show bar
+    yearFrom.classList.remove('form-control');
+    yearTo.classList.remove('form-control');
+    yearFrom.classList.add('form-range', 'flex-grow-1');
+    yearTo.classList.add('form-range', 'flex-grow-1');
+
+    // Umstrukturierung des yearDiv für bessere Darstellung
+    const yearDiv = document.getElementById('yearDiv');
+    if (yearDiv) {
+        // yearDiv leeren
+        yearDiv.innerHTML = '';
+        // Label-Zeile: "Jahr:"
+        const yearLabelRow = document.createElement('div');
+        yearLabelRow.style.marginBottom = '0.5em';
+        yearLabelRow.innerHTML = 'Jahr:';
+        yearLabelRow.style.fontWeight = 'normal';
+        yearLabelRow.style.fontSize = '1em';
+        yearDiv.appendChild(yearLabelRow);
+
+        // Zeile "von"
+        const vonRow = document.createElement('div');
+        vonRow.className = 'd-flex align-items-center mb-2';
+        // "von"-Label
+        const vonLabel = document.createElement('span');
+        vonLabel.textContent = 'von';
+        vonLabel.style.minWidth = '2.5em';
+        vonLabel.style.marginRight = '0.7em';
+        vonRow.appendChild(vonLabel);
+        // yearFrom-Input
+        yearFrom.style.marginRight = '0.8em';
+        vonRow.appendChild(yearFrom);
+        // yearFromValue
+        yearFromValue.style.minWidth = '3em';
+        yearFromValue.style.textAlign = 'right';
+        vonRow.appendChild(yearFromValue);
+        yearDiv.appendChild(vonRow);
+
+        // Zeile "bis"
+        const bisRow = document.createElement('div');
+        bisRow.className = 'd-flex align-items-center';
+        // "bis"-Label
+        const bisLabel = document.createElement('span');
+        bisLabel.textContent = 'bis';
+        bisLabel.style.minWidth = '2.5em';
+        bisLabel.style.marginRight = '0.7em';
+        bisRow.appendChild(bisLabel);
+        // yearTo-Input
+        yearTo.style.marginRight = '0.8em';
+        bisRow.appendChild(yearTo);
+        // yearToValue
+        yearToValue.style.minWidth = '3em';
+        yearToValue.style.textAlign = 'right';
+        bisRow.appendChild(yearToValue);
+        yearDiv.appendChild(bisRow);
+    }
 
     // Vorschläge beim Tippen: Filmtitel (Dropdown-ähnliche Auswahl)
     // --- Vorschlagslogik für FilmtitelInput ---
