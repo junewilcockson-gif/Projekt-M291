@@ -18,12 +18,14 @@
             <button id="kriterienBtn" class="btn btn-secondary">Kriterien Suche</button>
         </section>
 
-        <section id="filmtitelSection" style="display:none;" class="mb-3">
+        <!-- Filmtitel-Suche als Formular -->
+        <form id="filmtitelSection" style="display:none;" class="mb-3">
             <input type="text" id="filmtitelInput" placeholder="Titel eingeben" class="form-control mb-2"/>
-            <button id="filmtitelSearchBtn" class="btn btn-success">Suchen</button>
-        </section>
+            <button id="filmtitelSearchBtn" type="submit" class="btn btn-success">Suchen</button>
+        </form>
 
-        <section id="kriterienSection" style="display:none;" class="mb-3">
+        <!-- Kriterien-Suche als Formular -->
+        <form id="kriterienSection" style="display:none;" class="mb-3">
             <div id="actorDiv" class="mb-2">
                 <label for="actorInput" class="form-label">Schauspieler:</label>
                 <input type="text" id="actorInput" placeholder="Name" class="form-control"/>
@@ -48,9 +50,10 @@
                     <option>Wähle Typ</option>
                 </select>
             </div>
-            <button id="kriterienNextBtn" style="display:none;" class="btn btn-outline-secondary me-2">skip</button>
-            <button id="kriterienSearchBtn" style="display:none;" class="btn btn-success">Suchen</button>
-        </section>
+            <button id="kriterienNextBtn" style="display:none;" type="button" class="btn btn-outline-secondary me-2">skip</button>
+            <button id="kriterienSearchBtn" style="display:none;" type="submit" class="btn btn-success">Suchen</button>
+        </form>
+
     </div>
 
     <script src="script.js"></script>

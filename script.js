@@ -556,7 +556,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Überarbeiteter Kriterien-Suchblock: stabil, korrekt, async/await, stackable, alle Anforderungen
-    kriterienSearchBtn.addEventListener('click', async () => {
+    kriterienSearchBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         // Reset to first page for new search
         if (!isPaginating) {
             currentPage = 1;
@@ -575,6 +576,8 @@ document.addEventListener('DOMContentLoaded', () => {
         errorDiv.textContent = '';
         let warnImg = document.getElementById('kriterienError_warnImg');
         if (warnImg) warnImg.remove();
+        // Ensure errorDiv is accessible for screen readers
+        errorDiv.setAttribute('role', 'alert');
 
         // Welche Filter sind gesetzt?
         const isActor = actorInput.value.trim() !== '';
@@ -593,6 +596,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 1. Schauspieler-Eingabe: Regex-Check (logisch, keine Sonderzeichen) ---
         let actorId = null;
         let actorSuggestionClicked = actorInput.dataset.suggestionClicked === 'true';
+        // Prüfe ob nur Leerzeichen eingegeben wurden
+        if (isActor && actorInput.value.trim() === '') {
+            actorInput.style.borderColor = 'red';
+            showWarning(errorDiv, 'Bitte gib einen gültigen Namen ein.');
+            kriterienResults.innerHTML = '';
+            return;
+        }
         if (isActor && !actorSuggestionClicked) {
             const actorRegex = /^[A-Za-zÄÖÜäöüß]+(?:[ '-][A-Za-zÄÖÜäöüß]+)*$/;
             if (!actorRegex.test(actorInput.value.trim())) {
@@ -614,15 +624,32 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 3. Schauspieler-ID von TMDB holen, falls nötig (vor allen Endpoints-Fetches) ---
         if (isActor) {
             try {
-                const personUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(actorInput.value.trim())}`;
-                const resp = await fetch(personUrl);
-                if (!resp.ok) throw new Error();
-                const data = await resp.json();
-                if (!data || !Array.isArray(data.results) || data.results.length === 0) throw new Error();
+                let resp, data;
+                try {
+                    const personUrl = `https://api.themoviedb.org/3/search/person?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(actorInput.value.trim())}`;
+                    resp = await fetch(personUrl);
+                } catch (fetchErr) {
+                    throw new Error('Netzwerkfehler beim Laden der Schauspielerdaten.');
+                }
+                if (!resp.ok) {
+                    let msg = '';
+                    switch (resp.status) {
+                        case 401: msg = 'Fehler 401: Ungültiger API-Schlüssel.'; break;
+                        case 404: msg = 'Fehler 404: Schauspieler nicht gefunden.'; break;
+                        default: msg = `Fehler ${resp.status}: ${resp.statusText}`;
+                    }
+                    throw new Error(msg);
+                }
+                try {
+                    data = await resp.json();
+                } catch (jsonErr) {
+                    throw new Error('Fehler beim Verarbeiten der Schauspieler-Antwort.');
+                }
+                if (!data || !Array.isArray(data.results) || data.results.length === 0) throw new Error('Bitte gib einen gültigen Namen ein.');
                 actorId = data.results[0].id;
-            } catch {
+            } catch (ex) {
                 actorInput.style.borderColor = 'red';
-                showWarning(errorDiv, 'Bitte gib einen gültigen Namen ein.');
+                showWarning(errorDiv, ex.message);
                 kriterienResults.innerHTML = '';
                 return;
             }
@@ -634,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Lade-GIF vor Start der API-Abfrage anzeigen
         showLoading(kriterienResults);
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Helper für HTTP-Fehler
         function handleHTTPError(response) {
@@ -686,9 +713,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 // --- URL bauen ---
                 const url = new URL(`https://api.themoviedb.org/3/discover/${ep}`);
                 Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
-                const resp = await fetch(url);
-                handleHTTPError(resp);
-                const data = await resp.json();
+                let resp, data;
+                try {
+                    resp = await fetch(url);
+                } catch (fetchErr) {
+                    showWarning(errorDiv, 'Netzwerkfehler beim Laden der Ergebnisse.');
+                    kriterienResults.innerHTML = '';
+                    renderPaginationControls();
+                    return;
+                }
+                try {
+                    handleHTTPError(resp);
+                } catch (httpErr) {
+                    showWarning(errorDiv, httpErr.message);
+                    kriterienResults.innerHTML = '';
+                    renderPaginationControls();
+                    return;
+                }
+                try {
+                    data = await resp.json();
+                } catch (jsonErr) {
+                    showWarning(errorDiv, 'Fehler beim Verarbeiten der Antwort.');
+                    kriterienResults.innerHTML = '';
+                    renderPaginationControls();
+                    return;
+                }
                 // Store pagination info
                 totalPages = data.total_pages || 1;
                 let results = [];
@@ -698,13 +747,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Serien: Schauspieler-Check clientseitig via /tv/{id}/credits
                 if (ep === 'tv' && isActor && actorId && results.length > 0) {
                     const filtered = [];
-                    // Für jede Serie separat die Credits prüfen, ob actorId im Cast ist
                     for (const tv of results) {
                         try {
                             const creditsUrl = `https://api.themoviedb.org/3/tv/${tv.id}/credits?api_key=${apiKey}&language=de-DE`;
-                            const creditsResp = await fetch(creditsUrl);
+                            let creditsResp, creditsData;
+                            try {
+                                creditsResp = await fetch(creditsUrl);
+                            } catch (fetchErr) {
+                                continue; // Netzwerkfehler: Serie überspringen
+                            }
                             if (!creditsResp.ok) continue;
-                            const creditsData = await creditsResp.json();
+                            try {
+                                creditsData = await creditsResp.json();
+                            } catch (jsonErr) {
+                                continue; // Parse-Fehler: Serie überspringen
+                            }
                             if (creditsData && Array.isArray(creditsData.cast)) {
                                 if (creditsData.cast.some(c => c.id === actorId)) {
                                     filtered.push(tv);
@@ -751,24 +808,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             // Kartenanzeige: Poster links, Infos rechts, responsive, ALLE Felder dynamisch
             function renderAllFields(obj) {
-                // Hilfsfunktion: gibt ein <ul> mit allen Feldern des Objekts zurück
+                // Hilfsfunktion: gibt ein <ul> mit allen Feldern des Objekts zurück, robust gegen leere/falsche Daten
                 let html = '<ul style="margin:0; padding:0 0 0 1.1em;">';
                 for (const [key, value] of Object.entries(obj)) {
                     if (key === 'poster_path') continue; // Poster separat
                     if (key === '__type') continue; // Typ separat
                     html += `<li style="margin-bottom:2px;"><b>${key}:</b> `;
-                    if (value === null || typeof value === 'undefined') {
-                        html += '<i>null</i>';
+                    if (value === null || typeof value === 'undefined' || (typeof value === 'string' && value.trim() === '')) {
+                        html += '<i>Keine Angabe</i>';
                     } else if (typeof value === 'object') {
                         if (Array.isArray(value)) {
-                            if (value.length === 0) {
+                            if (!Array.isArray(value) || value.length === 0) {
                                 html += '<i>Leeres Array</i>';
-                            } else if (typeof value[0] === 'object') {
+                            } else if (typeof value[0] === 'object' && value[0] !== null) {
                                 html += '<ul style="margin:0 0 0 1.1em;">';
                                 for (const entry of value) {
                                     html += '<li>';
-                                    if (typeof entry === 'object') {
+                                    if (typeof entry === 'object' && entry !== null) {
                                         html += renderAllFields(entry);
+                                    } else if (entry === null || typeof entry === 'undefined' || (typeof entry === 'string' && entry.trim() === '')) {
+                                        html += '<i>Keine Angabe</i>';
                                     } else {
                                         html += String(entry);
                                     }
@@ -776,8 +835,11 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                                 html += '</ul>';
                             } else {
-                                html += value.map(v => String(v)).join(', ');
+                                // Array von primitives
+                                html += value.map(v => (v === null || typeof v === 'undefined' || (typeof v === 'string' && v.trim() === '')) ? 'Keine Angabe' : String(v)).join(', ');
                             }
+                        } else if (value === null) {
+                            html += '<i>Keine Angabe</i>';
                         } else {
                             html += renderAllFields(value);
                         }
@@ -792,16 +854,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (results.length > 0) {
                 kriterienResults.innerHTML = '<div class="card-container">' +
                     results.map(item => {
-                        const title = item.title || item.name || 'Unbekannt';
-                        const year = (item.release_date || item.first_air_date || '').substring(0, 4) || '';
-                        const language = item.original_language || '';
-                        const overview = item.overview || '';
+                        // Robust: Platzhalter für fehlende Felder
+                        const title = (typeof item.title === 'string' && item.title.trim() !== '') ? item.title : ((typeof item.name === 'string' && item.name.trim() !== '') ? item.name : 'Unbekannt');
+                        const rawYear = item.release_date || item.first_air_date;
+                        const year = (typeof rawYear === 'string' && rawYear.length >= 4) ? rawYear.substring(0, 4) : 'n/a';
+                        const language = (typeof item.original_language === 'string' && item.original_language.trim() !== '') ? item.original_language : 'n/a';
+                        const overview = (typeof item.overview === 'string' && item.overview.trim() !== '') ? item.overview : '<span style="color:#888;">Keine Beschreibung verfügbar.</span>';
                         // Bewertung (vote_average) und Stimmen (vote_count)
-                        const voteAverage = typeof item.vote_average === 'number' ? item.vote_average : 0;
-                        const voteCount = typeof item.vote_count === 'number' ? item.vote_count : 0;
+                        const voteAverage = (typeof item.vote_average === 'number' && !isNaN(item.vote_average)) ? item.vote_average : 0;
+                        const voteCount = (typeof item.vote_count === 'number' && !isNaN(item.vote_count)) ? item.vote_count : 0;
                         const ratingBarWidth = Math.round((voteAverage / 10) * 100);
                         const ratingValue = voteAverage.toFixed(1);
-                        const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
+                        const posterUrl = (typeof item.poster_path === 'string' && item.poster_path.trim() !== '') ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
                         // click handler for detail view via data-item attribute
                         const itemJson = encodeURIComponent(JSON.stringify(item));
                         return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;" data-item="${itemJson}">
@@ -817,7 +881,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
 
                                 <div style="font-size:0.95em; color:#666; margin-bottom:0.6em;">
-                                  ${language ? 'Originalsprache: ' + language : ''}
+                                  ${language !== 'n/a' ? 'Originalsprache: ' + language : '<span style="color:#888;">Originalsprache unbekannt</span>'}
                                 </div>
                                 ${voteCount > 0 ? `
                                 <div style="margin-top:auto;">
@@ -876,7 +940,8 @@ document.addEventListener('DOMContentLoaded', () => {
         filmtitelSearchBtn.insertAdjacentElement('afterend', filmtitelResults);
     }
 
-    filmtitelSearchBtn.addEventListener('click', async () => {
+    filmtitelSearchBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
         // Reset to first page for new search
         if (!isPaginating) {
             currentPage = 1;
@@ -896,10 +961,10 @@ document.addEventListener('DOMContentLoaded', () => {
         errorDiv.textContent = '';
         let warnImg = document.getElementById('filmtitelError_warnImg');
         if (warnImg) warnImg.remove();
+        // Ensure errorDiv is accessible for screen readers
+        errorDiv.setAttribute('role', 'alert');
         filmtitelSuggestions.innerHTML = '';
-        // Lade-GIF vor Start der API-Abfrage anzeigen
-        showLoading(filmtitelResults);
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Prüfe ob nur Leerzeichen eingegeben wurden
         if (filmtitelInput.value.trim() === '') {
             filmtitelInput.style.borderColor = 'red';
             showWarning(errorDiv, 'Bitte gib einen gültigen Filmtitel ein.');
@@ -917,6 +982,9 @@ document.addEventListener('DOMContentLoaded', () => {
             filmtitelResults.innerHTML = '';
             return;
         }
+        // Lade-GIF vor Start der API-Abfrage anzeigen
+        showLoading(filmtitelResults);
+        await new Promise(resolve => setTimeout(resolve, 1000));
         // TMDB-Abfrage: Suche sowohl Filme als auch Serien
         const query = filmtitelInput.value.trim();
         // Always use currentPage
@@ -938,11 +1006,39 @@ document.addEventListener('DOMContentLoaded', () => {
         // Suche asynchron, wie bei Kriterien-Suche
         (async () => {
             try {
-                // Parallel suchen
-                const [respMovie, respTV] = await Promise.all([fetch(urlMovie), fetch(urlTV)]);
-                handleHTTPError(respMovie);
-                handleHTTPError(respTV);
-                const [dataMovie, dataTV] = await Promise.all([respMovie.json(), respTV.json()]);
+                // Parallel suchen, Fehlerbehandlung für beide Requests
+                let respMovie, respTV, dataMovie, dataTV;
+                try {
+                    [respMovie, respTV] = await Promise.all([
+                        fetch(urlMovie),
+                        fetch(urlTV)
+                    ]);
+                } catch (fetchErr) {
+                    showWarning(errorDiv, 'Netzwerkfehler beim Laden der Ergebnisse.');
+                    filmtitelResults.innerHTML = '';
+                    renderPaginationControls();
+                    return;
+                }
+                try {
+                    handleHTTPError(respMovie);
+                    handleHTTPError(respTV);
+                } catch (httpErr) {
+                    showWarning(errorDiv, httpErr.message);
+                    filmtitelResults.innerHTML = '';
+                    renderPaginationControls();
+                    return;
+                }
+                try {
+                    [dataMovie, dataTV] = await Promise.all([
+                        respMovie.json(),
+                        respTV.json()
+                    ]);
+                } catch (jsonErr) {
+                    showWarning(errorDiv, 'Fehler beim Verarbeiten der Antwort.');
+                    filmtitelResults.innerHTML = '';
+                    renderPaginationControls();
+                    return;
+                }
                 // Store pagination info (from first successful response)
                 totalPages = (dataMovie && dataMovie.total_pages) ? dataMovie.total_pages : ((dataTV && dataTV.total_pages) ? dataTV.total_pages : 1);
                 let results = [];
@@ -978,18 +1074,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (key === 'poster_path') continue;
                         if (key === '__type') continue;
                         html += `<li style="margin-bottom:2px;"><b>${key}:</b> `;
-                        if (value === null || typeof value === 'undefined') {
-                            html += '<i>null</i>';
+                        if (value === null || typeof value === 'undefined' || (typeof value === 'string' && value.trim() === '')) {
+                            html += '<i>Keine Angabe</i>';
                         } else if (typeof value === 'object') {
                             if (Array.isArray(value)) {
-                                if (value.length === 0) {
+                                if (!Array.isArray(value) || value.length === 0) {
                                     html += '<i>Leeres Array</i>';
-                                } else if (typeof value[0] === 'object') {
+                                } else if (typeof value[0] === 'object' && value[0] !== null) {
                                     html += '<ul style="margin:0 0 0 1.1em;">';
                                     for (const entry of value) {
                                         html += '<li>';
-                                        if (typeof entry === 'object') {
+                                        if (typeof entry === 'object' && entry !== null) {
                                             html += renderAllFields(entry);
+                                        } else if (entry === null || typeof entry === 'undefined' || (typeof entry === 'string' && entry.trim() === '')) {
+                                            html += '<i>Keine Angabe</i>';
                                         } else {
                                             html += String(entry);
                                         }
@@ -997,8 +1095,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }
                                     html += '</ul>';
                                 } else {
-                                    html += value.map(v => String(v)).join(', ');
+                                    html += value.map(v => (v === null || typeof v === 'undefined' || (typeof v === 'string' && v.trim() === '')) ? 'Keine Angabe' : String(v)).join(', ');
                                 }
+                            } else if (value === null) {
+                                html += '<i>Keine Angabe</i>';
                             } else {
                                 html += renderAllFields(value);
                             }
@@ -1013,16 +1113,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (results.length > 0) {
                     filmtitelResults.innerHTML = '<div class="card-container">' +
                         results.map(item => {
-                            const title = item.title || item.name || 'Unbekannt';
-                            const year = (item.release_date || item.first_air_date || '').substring(0, 4) || '';
-                            const language = item.original_language || '';
-                            const overview = item.overview || '';
+                            // Robust: Platzhalter für fehlende Felder
+                            const title = (typeof item.title === 'string' && item.title.trim() !== '') ? item.title : ((typeof item.name === 'string' && item.name.trim() !== '') ? item.name : 'Unbekannt');
+                            const rawYear = item.release_date || item.first_air_date;
+                            const year = (typeof rawYear === 'string' && rawYear.length >= 4) ? rawYear.substring(0, 4) : 'n/a';
+                            const language = (typeof item.original_language === 'string' && item.original_language.trim() !== '') ? item.original_language : 'n/a';
+                            const overview = (typeof item.overview === 'string' && item.overview.trim() !== '') ? item.overview : '<span style="color:#888;">Keine Beschreibung verfügbar.</span>';
                             // Bewertung (vote_average) und Stimmen (vote_count)
-                            const voteAverage = typeof item.vote_average === 'number' ? item.vote_average : 0;
-                            const voteCount = typeof item.vote_count === 'number' ? item.vote_count : 0;
+                            const voteAverage = (typeof item.vote_average === 'number' && !isNaN(item.vote_average)) ? item.vote_average : 0;
+                            const voteCount = (typeof item.vote_count === 'number' && !isNaN(item.vote_count)) ? item.vote_count : 0;
                             const ratingBarWidth = Math.round((voteAverage / 10) * 100);
                             const ratingValue = voteAverage.toFixed(1);
-                            const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
+                            const posterUrl = (typeof item.poster_path === 'string' && item.poster_path.trim() !== '') ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
                             // click handler for detail view via data-item attribute
                             const itemJson = encodeURIComponent(JSON.stringify(item));
                             return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;" data-item="${itemJson}">
@@ -1038,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
 
                                     <div style="font-size:0.95em; color:#666; margin-bottom:0.6em;">
-                                      ${language ? 'Originalsprache: ' + language : ''}
+                                      ${language !== 'n/a' ? 'Originalsprache: ' + language : '<span style="color:#888;">Originalsprache unbekannt</span>'}
                                     </div>
                                     ${voteCount > 0 ? `
                                     <div style="margin-top:auto;">
