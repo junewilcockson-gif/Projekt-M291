@@ -1,4 +1,139 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- Detailansicht für Karten ---
+    async function openDetailView(item) {
+        let detailView = document.getElementById('detailView');
+        if (!detailView) {
+            detailView = document.createElement('div');
+            detailView.id = 'detailView';
+            detailView.style.padding = '1.5em';
+            document.body.appendChild(detailView);
+        }
+
+        // 1) Determine type and base endpoint
+        const type = item.__type === 'tv' ? 'tv' : 'movie';
+        const id = item.id;
+        const apiKey = '47c4ec1ddf8bc5518dcacb259d6bcbcb';
+        // 2) Fetch additional detail data asynchronously
+        const urls = [
+            `https://api.themoviedb.org/3/${type}/${id}/credits?api_key=${apiKey}&language=de-DE`,
+            `https://api.themoviedb.org/3/${type}/${id}/watch/providers?api_key=${apiKey}`,
+            `https://api.themoviedb.org/3/${type}/${id}?api_key=${apiKey}&language=de-DE`
+        ];
+        // 3) Use await Promise.all, continue gracefully on error
+        let [credits, providers, full] = await Promise.all(urls.map(url => fetch(url).then(
+            r => r.ok ? r.json() : null
+        ).catch(_ => null)));
+
+        // Fallbacks
+        credits = credits || {};
+        providers = providers || {};
+        full = full || {};
+
+        // 4) Build the detail view UI in this order:
+        // Poster image (centered, large)
+        let posterUrl = full.poster_path
+            ? `https://image.tmdb.org/t/p/w342${full.poster_path}`
+            : (item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : 'assets/placeholder_film.png');
+
+        // Title (H1)
+        const title = full.title || full.name || item.title || item.name || 'Unbekannt';
+        // Media type text: Film / Serie
+        const mediatypeText = type === 'movie' ? 'Film' : 'Serie';
+        // Release year
+        const year = (full.release_date || full.first_air_date || item.release_date || item.first_air_date || '').substring(0,4) || '';
+        // Overview (Beschreibung)
+        const overview = full.overview || item.overview || '';
+        // Top 10 Cast members, Format: Name – Rolle, unterhalb der Beschreibung
+        let castHtml = '';
+        if (Array.isArray(credits.cast) && credits.cast.length > 0) {
+            castHtml = '<ul style="padding-left:1.2em; margin:0">';
+            credits.cast.slice(0, 10).forEach(c => {
+                const cname = c.name || '';
+                const role = c.character || '';
+                // Name – Rolle
+                castHtml += `<li>${cname}${role ? ' – ' + role : ''}</li>`;
+            });
+            castHtml += '</ul>';
+        } else {
+            castHtml = '<span style="color:#888;">Keine Angaben</span>';
+        }
+        // Streaminganbieter: untereinander (Liste), wenn keine: Text
+        let providersHtml = '';
+        let deFlat = providers.results && providers.results.DE && Array.isArray(providers.results.DE.flatrate)
+            ? providers.results.DE.flatrate : null;
+        if (deFlat && deFlat.length > 0) {
+            // Liste untereinander
+            providersHtml = '<ul style="padding-left:1.2em; margin:0">';
+            deFlat.forEach(p => {
+                providersHtml += `<li style="margin-bottom:0.5em;display:flex;align-items:center;">
+                    ${p.logo_path
+                        ? `<img src="https://image.tmdb.org/t/p/w45${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name}" style="height:28px;vertical-align:middle; border-radius:4px; background:#fff; box-shadow:0 1px 4px #0002; margin-right:10px;">`
+                        : ''
+                    }
+                    <span style="font-size:0.97em; vertical-align:middle;">${p.provider_name}</span>
+                </li>`;
+            });
+            providersHtml += '</ul>';
+        } else {
+            providersHtml = '<span style="color:#888;">Keine Streaminganbieter gefunden</span>';
+        }
+        // Bewertungsbalken (exakt wie Übersicht, nur wenn vote_count > 0), zentriert und direkt unter Beschreibung
+        const voteAverage = typeof full.vote_average === 'number' ? full.vote_average : 0;
+        const voteCount = typeof full.vote_count === 'number' ? full.vote_count : 0;
+        let ratingHtml = '';
+        if (voteCount > 0) {
+            const ratingBarWidth = Math.round((voteAverage / 10) * 100);
+            const ratingValue = voteAverage.toFixed(1);
+            ratingHtml = `
+                <div style="margin-top:1.3em; text-align:center;">
+                  <div style="font-size:1em; margin-bottom:0.12em; text-align:center;">Bewertung:</div>
+                  <div style="background:#e0e0e0; border-radius:4px; overflow:hidden; height:8px; width:100%; max-width:350px; margin:0 auto;">
+                    <div style="background:#555; height:100%; width:${ratingBarWidth}%;"></div>
+                  </div>
+                  <div style="font-size:0.85em; color:#888; margin-top:2px; text-align:center;">
+                    ${ratingValue}/10 (${voteCount} Stimmen)
+                  </div>
+                </div>
+            `;
+        }
+
+        // Remove popularity, do not show it
+
+        // Compose detail view HTML
+        detailView.innerHTML = `
+            <button id="detailBackBtn">← Zurück</button>
+            <div style="text-align:center; margin:1.2em 0 1.7em 0;">
+                <img src="${posterUrl}" style="max-width:260px; width:100%; height:auto; border-radius:10px; box-shadow:0 2px 12px #0002;">
+            </div>
+            <h1 style="font-size:2em; margin-bottom:0.25em; text-align:center;">${title}</h1>
+            <div style="text-align:center; font-size:1.1em; color:#666; margin-bottom:0.2em;">
+                ${mediatypeText} &middot; ${year}
+            </div>
+            <div style="margin:1.3em 0 1.2em 0; font-size:1.09em; color:#222; line-height:1.4; text-align:center;">
+                ${overview ? overview : '<span style="color:#888;">Keine Beschreibung verfügbar.</span>'}
+            </div>
+            ${ratingHtml}
+            <div style="margin:1.4em 0 0.9em 0;">
+                <div style="font-weight:bold; margin-bottom:0.3em;">Top 10 Besetzung:</div>
+                ${castHtml}
+            </div>
+            <div style="margin:1.4em 0 0.9em 0;">
+                <div style="font-weight:bold; margin-bottom:0.3em;">Streaminganbieter:</div>
+                ${providersHtml}
+            </div>
+        `;
+
+        detailView.style.display = 'block';
+        if (filmtitelSection) filmtitelSection.style.display = 'none';
+        if (kriterienSection) kriterienSection.style.display = 'none';
+        window.scrollTo(0,0);
+
+        document.getElementById('detailBackBtn').onclick = () => {
+            detailView.style.display = 'none';
+            if (filmtitelSection) filmtitelSection.style.display = 'block';
+            if (kriterienSection) kriterienSection.style.display = 'block';
+        };
+    }
     const startSection = document.getElementById('startSection');
     const filmtitelSection = document.getElementById('filmtitelSection');
     const kriterienSection = document.getElementById('kriterienSection');
@@ -474,28 +609,44 @@ document.addEventListener('DOMContentLoaded', () => {
                         const ratingBarWidth = Math.round((voteAverage / 10) * 100);
                         const ratingValue = voteAverage.toFixed(1);
                         const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
+                        // click handler for detail view
+                        const itemJson = encodeURIComponent(JSON.stringify(item));
                         return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;">
-                            <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px;">
+                            <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer"
+                                onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>
                             <div class="card-info" style="flex: 1; padding: 0 1em; display: flex; flex-direction: column; justify-content: flex-start;">
                                 <div style="margin-bottom: 0.3em;">
-                                    <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1;">${title}</div>
+                                    <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer"
+                                        onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>${title}</div>
                                 </div>
-                                <div style="font-size:1em; color:#444; margin-bottom:0.1em;">${year ? 'Jahr: ' + year : ''}</div>
-                                <div style="font-size:0.98em; color:#666; margin-bottom:0.2em;">${language ? 'Originalsprache: ' + language : ''}</div>
-                                <div style="font-size:0.97em; color:#222; margin-bottom:0.6em;">${overview}</div>
+                                <div style="font-size:1em; color:#444; margin-bottom:0.6em;">${year}</div>
+
+                                <div style="font-size:0.97em; color:#222; margin-bottom:0.8em;">
+                                  ${overview}
+                                </div>
+
+                                <div style="font-size:0.95em; color:#666; margin-bottom:0.6em;">
+                                  ${language ? 'Originalsprache: ' + language : ''}
+                                </div>
+                                ${voteCount > 0 ? `
                                 <div style="margin-top:auto;">
                                   <div style="font-size:0.95em; margin-bottom:0.12em;">Bewertung:</div>
                                   <div style="background:#e0e0e0; border-radius:4px; overflow:hidden; height:8px; width:100%; position:relative; margin-bottom:2px;">
-                                    <div style="background:#555; height:100%; width:${ratingBarWidth}%; transition:width 0.3s;"></div>
+                                    <div style="background:#555; height:100%; width:${ratingBarWidth}%;"></div>
                                   </div>
                                   <div style="font-size:0.85em; color:#888; margin-top:2px;">
-                                    Bewertung: ${ratingValue}/10 (${voteCount} Stimmen)
+                                    ${ratingValue}/10 (${voteCount} Stimmen)
                                   </div>
                                 </div>
+                                ` : ''}
                             </div>
                         </div>`;
                     }).join('') +
                     '</div>';
+                // Helper function for onclick (global, for this context)
+                window.openDetailViewFromCard = function(jsonStr) {
+                    openDetailView(JSON.parse(jsonStr));
+                }
             } else {
                 kriterienResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
             }
@@ -676,28 +827,44 @@ document.addEventListener('DOMContentLoaded', () => {
                             const ratingBarWidth = Math.round((voteAverage / 10) * 100);
                             const ratingValue = voteAverage.toFixed(1);
                             const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
+                            // click handler for detail view
+                            const itemJson = encodeURIComponent(JSON.stringify(item));
                             return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;">
-                                <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px;">
+                                <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer"
+                                    onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>
                                 <div class="card-info" style="flex: 1; padding: 0 1em; display: flex; flex-direction: column; justify-content: flex-start;">
                                     <div style="margin-bottom: 0.3em;">
-                                        <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1;">${title}</div>
+                                        <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer"
+                                            onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>${title}</div>
                                     </div>
-                                    <div style="font-size:1em; color:#444; margin-bottom:0.1em;">${year ? 'Jahr: ' + year : ''}</div>
-                                    <div style="font-size:0.98em; color:#666; margin-bottom:0.2em;">${language ? 'Originalsprache: ' + language : ''}</div>
-                                    <div style="font-size:0.97em; color:#222; margin-bottom:0.6em;">${overview}</div>
+                                    <div style="font-size:1em; color:#444; margin-bottom:0.6em;">${year}</div>
+
+                                    <div style="font-size:0.97em; color:#222; margin-bottom:0.8em;">
+                                      ${overview}
+                                    </div>
+
+                                    <div style="font-size:0.95em; color:#666; margin-bottom:0.6em;">
+                                      ${language ? 'Originalsprache: ' + language : ''}
+                                    </div>
+                                    ${voteCount > 0 ? `
                                     <div style="margin-top:auto;">
                                       <div style="font-size:0.95em; margin-bottom:0.12em;">Bewertung:</div>
                                       <div style="background:#e0e0e0; border-radius:4px; overflow:hidden; height:8px; width:100%; position:relative; margin-bottom:2px;">
-                                        <div style="background:#555; height:100%; width:${ratingBarWidth}%; transition:width 0.3s;"></div>
+                                        <div style="background:#555; height:100%; width:${ratingBarWidth}%;"></div>
                                       </div>
                                       <div style="font-size:0.85em; color:#888; margin-top:2px;">
-                                        Bewertung: ${ratingValue}/10 (${voteCount} Stimmen)
+                                        ${ratingValue}/10 (${voteCount} Stimmen)
                                       </div>
                                     </div>
+                                    ` : ''}
                                 </div>
                             </div>`;
                         }).join('') +
                         '</div>';
+                    // Helper function for onclick (global, for this context)
+                    window.openDetailViewFromCard = function(jsonStr) {
+                        openDetailView(JSON.parse(jsonStr));
+                    }
                 } else {
                     filmtitelResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
                 }
@@ -767,8 +934,12 @@ document.addEventListener('DOMContentLoaded', () => {
     filmtitelInput.addEventListener('input', removeFilmtitelError);
 
     // Vorschläge beim Tippen: Filmtitel (Dropdown-ähnliche Auswahl)
+    // --- Vorschlagslogik für FilmtitelInput ---
+    // State: Vorschläge nur nach input, nicht nach focus
+    let filmtitelSuggestionsActive = false;
     filmtitelInput.addEventListener('input', async function() {
         filmtitelInput.dataset.suggestionClicked = 'false';
+        filmtitelSuggestionsActive = true;
         const query = filmtitelInput.value.trim();
         filmtitelSuggestions.innerHTML = '';
         filmtitelSuggestions.style.display = 'none';
@@ -811,30 +982,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 list.style.border = '1px solid #ccc';
                 list.style.width = filmtitelInput.offsetWidth + 'px';
                 list.style.zIndex = '1000';
-                results.forEach(item => {
-                    const li = document.createElement('li');
-                    const title = item.title || item.name || 'Unbekannt';
-                    const date = (item.release_date || item.first_air_date || '').substring(0,4) || 'n/a';
-                    li.textContent = `${title} (${date})`;
-                    li.style.padding = '6px 12px';
-                    li.style.cursor = 'pointer';
-                    li.addEventListener('mousedown', function(e) {
-                        filmtitelInput.value = title;
-                        filmtitelInput.dataset.suggestionClicked = 'true';
-                        filmtitelSuggestions.innerHTML = '';
-                        filmtitelSuggestions.style.display = 'none';
-                        // Fetch auslösen (wie Button-Klick)
-                        filmtitelSearchBtn.click();
-                        e.preventDefault();
-                    });
-                    li.addEventListener('mouseover', function() {
-                        li.style.background = '#f0f0f0';
-                    });
-                    li.addEventListener('mouseout', function() {
-                        li.style.background = '';
-                    });
-                    list.appendChild(li);
+            results.forEach(item => {
+                const li = document.createElement('li');
+                const title = item.title || item.name || 'Unbekannt';
+                const date = (item.release_date || item.first_air_date || '').substring(0,4) || 'n/a';
+                li.textContent = `${title} (${date})`;
+                li.style.padding = '6px 12px';
+                li.style.cursor = 'pointer';
+                li.addEventListener('mousedown', function(e) {
+                    filmtitelInput.value = title;
+                    filmtitelInput.dataset.suggestionClicked = 'true';
+                    // Vorschläge beider Felder komplett entfernen
+                    filmtitelSuggestions.innerHTML = '';
+                    filmtitelSuggestions.style.display = 'none';
+                    filmtitelSuggestionsActive = false;
+                    actorSuggestions.innerHTML = '';
+                    actorSuggestions.style.display = 'none';
+                    actorSuggestionsActive = false;
+                    e.preventDefault();
                 });
+                li.addEventListener('mouseover', function() {
+                    li.style.background = '#f0f0f0';
+                });
+                li.addEventListener('mouseout', function() {
+                    li.style.background = '';
+                });
+                list.appendChild(li);
+            });
                 filmtitelSuggestions.innerHTML = '';
                 filmtitelSuggestions.appendChild(list);
                 filmtitelSuggestions.style.display = 'block';
@@ -844,11 +1018,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // Keine Vorschläge anzeigen
         }
     });
+    // Vorschläge bei focus NICHT anzeigen, sondern nur bei input
+    filmtitelInput.addEventListener('focus', function() {
+        // keine Vorschläge auf focus anzeigen
+    });
+    // Enter schließt Vorschläge sofort
+    filmtitelInput.addEventListener('keydown', function(e) {
+        if (e.key === "Enter") {
+            filmtitelSuggestions.innerHTML = '';
+            filmtitelSuggestions.style.display = 'none';
+            filmtitelSuggestionsActive = false;
+        }
+    });
     // Klick außerhalb schließt Vorschläge (Filmtitel)
     document.addEventListener('mousedown', function(e) {
         if (!filmtitelSuggestions.contains(e.target) && e.target !== filmtitelInput) {
             filmtitelSuggestions.innerHTML = '';
             filmtitelSuggestions.style.display = 'none';
+            filmtitelSuggestionsActive = false;
         }
     });
 
@@ -859,8 +1046,11 @@ document.addEventListener('DOMContentLoaded', () => {
         actorSuggestions.id = 'actorSuggestions';
         actorInput.insertAdjacentElement('afterend', actorSuggestions);
     }
+    // --- Vorschlagslogik für actorInput ---
+    let actorSuggestionsActive = false;
     actorInput.addEventListener('input', async function() {
         actorInput.dataset.suggestionClicked = 'false';
+        actorSuggestionsActive = true;
         const query = actorInput.value.trim();
         actorSuggestions.innerHTML = '';
         actorSuggestions.style.display = 'none';
@@ -888,9 +1078,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     li.addEventListener('mousedown', function(e) {
                         actorInput.value = actor.name;
                         actorInput.dataset.suggestionClicked = 'true';
+                        // Vorschläge beider Felder komplett entfernen
+                        filmtitelSuggestions.innerHTML = '';
+                        filmtitelSuggestions.style.display = 'none';
+                        filmtitelSuggestionsActive = false;
                         actorSuggestions.innerHTML = '';
                         actorSuggestions.style.display = 'none';
-                        actorInput.dispatchEvent(new Event('input'));
+                        actorSuggestionsActive = false;
                         e.preventDefault();
                     });
                     li.addEventListener('mouseover', function() {
@@ -910,11 +1104,24 @@ document.addEventListener('DOMContentLoaded', () => {
             // Keine Vorschläge anzeigen
         }
     });
+    // Vorschläge bei focus NICHT anzeigen, sondern nur bei input
+    actorInput.addEventListener('focus', function() {
+        // keine Vorschläge auf focus anzeigen
+    });
+    // Enter schließt Vorschläge sofort
+    actorInput.addEventListener('keydown', function(e) {
+        if (e.key === "Enter") {
+            actorSuggestions.innerHTML = '';
+            actorSuggestions.style.display = 'none';
+            actorSuggestionsActive = false;
+        }
+    });
     // Klick außerhalb schließt Vorschläge (Schauspieler)
     document.addEventListener('mousedown', function(e) {
         if (!actorSuggestions.contains(e.target) && e.target !== actorInput) {
             actorSuggestions.innerHTML = '';
             actorSuggestions.style.display = 'none';
+            actorSuggestionsActive = false;
         }
     });
 });
