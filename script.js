@@ -1,11 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- Detailansicht für Karten ---
+    // Speichere die letzte Scrollposition global für das Modal
+    let lastScrollY = 0;
     async function openDetailView(item) {
         let detailView = document.getElementById('detailView');
         if (!detailView) {
             detailView = document.createElement('div');
             detailView.id = 'detailView';
-            detailView.style.padding = '1.5em';
             document.body.appendChild(detailView);
         }
 
@@ -50,8 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
             credits.cast.slice(0, 10).forEach(c => {
                 const cname = c.name || '';
                 const role = c.character || '';
-                // Name – Rolle
-                castHtml += `<li>${cname}${role ? ' – ' + role : ''}</li>`;
+                // Name – Rolle, Name als klickbarer span
+                castHtml += `<li><span class="cast-actor-clickable" style="cursor:pointer; color:#2360a5; text-decoration:underline;" data-actor-name="${encodeURIComponent(cname)}">${cname}</span>${role ? ' – ' + role : ''}</li>`;
             });
             castHtml += '</ul>';
         } else {
@@ -61,15 +62,22 @@ document.addEventListener('DOMContentLoaded', () => {
         let providersHtml = '';
         let deFlat = providers.results && providers.results.DE && Array.isArray(providers.results.DE.flatrate)
             ? providers.results.DE.flatrate : null;
+        // TMDB liefert einen allgemeinen Link für alle deutschen Anbieter (providers.results.DE.link)
+        const providerUrl = providers.results && providers.results.DE && providers.results.DE.link ? providers.results.DE.link : '';
         if (deFlat && deFlat.length > 0) {
-            // Liste untereinander
             providersHtml = '<ul style="padding-left:1.2em; margin:0">';
             deFlat.forEach(p => {
-                providersHtml += `<li style="margin-bottom:0.5em;display:flex;align-items:center;">
-                    ${p.logo_path
-                        ? `<img src="https://image.tmdb.org/t/p/w45${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name}" style="height:28px;vertical-align:middle; border-radius:4px; background:#fff; box-shadow:0 1px 4px #0002; margin-right:10px;">`
-                        : ''
+                let logoImg = '';
+                if (p.logo_path) {
+                    // Wenn provider_url vorhanden, mache Logo klickbar
+                    if (providerUrl) {
+                        logoImg = `<a href="${providerUrl}" target="_blank" rel="noopener" style="display:inline-block;"><img src="https://image.tmdb.org/t/p/w45${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name}" style="height:28px;vertical-align:middle; border-radius:4px; background:#fff; box-shadow:0 1px 4px #0002; margin-right:10px; cursor:pointer;"></a>`;
+                    } else {
+                        logoImg = `<img src="https://image.tmdb.org/t/p/w45${p.logo_path}" alt="${p.provider_name}" title="${p.provider_name}" style="height:28px;vertical-align:middle; border-radius:4px; background:#fff; box-shadow:0 1px 4px #0002; margin-right:10px;">`;
                     }
+                }
+                providersHtml += `<li style="margin-bottom:0.5em;display:flex;align-items:center;">
+                    ${logoImg}
                     <span style="font-size:0.97em; vertical-align:middle;">${p.provider_name}</span>
                 </li>`;
             });
@@ -99,40 +107,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Remove popularity, do not show it
 
-        // Compose detail view HTML
+        // Compose detail view HTML (as modal)
         detailView.innerHTML = `
-            <button id="detailBackBtn">← Zurück</button>
-            <div style="text-align:center; margin:1.2em 0 1.7em 0;">
-                <img src="${posterUrl}" style="max-width:260px; width:100%; height:auto; border-radius:10px; box-shadow:0 2px 12px #0002;">
-            </div>
-            <h1 style="font-size:2em; margin-bottom:0.25em; text-align:center;">${title}</h1>
-            <div style="text-align:center; font-size:1.1em; color:#666; margin-bottom:0.2em;">
-                ${mediatypeText} &middot; ${year}
-            </div>
-            <div style="margin:1.3em 0 1.2em 0; font-size:1.09em; color:#222; line-height:1.4; text-align:center;">
-                ${overview ? overview : '<span style="color:#888;">Keine Beschreibung verfügbar.</span>'}
-            </div>
-            ${ratingHtml}
-            <div style="margin:1.4em 0 0.9em 0;">
-                <div style="font-weight:bold; margin-bottom:0.3em;">Top 10 Besetzung:</div>
-                ${castHtml}
-            </div>
-            <div style="margin:1.4em 0 0.9em 0;">
-                <div style="font-weight:bold; margin-bottom:0.3em;">Streaminganbieter:</div>
-                ${providersHtml}
+            <div id="detailModalOverlay" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:9999; display:flex; align-items:center; justify-content:center;">
+              <div id="detailModalContainer" style="background:#fff; border-radius:12px; max-width:800px; width:92vw; max-height:92vh; overflow-y:auto; box-shadow:0 6px 32px #0004; padding:2em 1.5em 1.5em 1.5em; position:relative;">
+                <button id="detailCloseBtn" style="position:absolute; top:1em; right:1em; font-size:1.6em; padding:0.15em 0.7em; border-radius:5px; border:none; background:transparent; color:#888; cursor:pointer; font-weight:bold; line-height:1;">&#10005;</button>
+                <div style="text-align:center; margin:1.2em 0 1.7em 0;">
+                    <img src="${posterUrl}" style="max-width:260px; width:100%; height:auto; border-radius:10px; box-shadow:0 2px 12px #0002;">
+                </div>
+                <h1 style="font-size:2em; margin-bottom:0.25em; text-align:center;">${title}</h1>
+                <div style="text-align:center; font-size:1.1em; color:#666; margin-bottom:0.2em;">
+                    ${mediatypeText} &middot; ${year}
+                </div>
+                <div style="margin:1.3em 0 1.2em 0; font-size:1.09em; color:#222; line-height:1.4; text-align:center;">
+                    ${overview ? overview : '<span style="color:#888;">Keine Beschreibung verfügbar.</span>'}
+                </div>
+                ${ratingHtml}
+                <div style="margin:1.4em 0 0.9em 0;">
+                    <div style="font-weight:bold; margin-bottom:0.3em;">Top 10 Besetzung:</div>
+                    ${castHtml}
+                </div>
+                <div style="margin:1.4em 0 0.9em 0;">
+                    <div style="font-weight:bold; margin-bottom:0.3em;">Streaminganbieter:</div>
+                    ${providersHtml}
+                </div>
+              </div>
             </div>
         `;
 
+        // Modal: show and hide logic
         detailView.style.display = 'block';
-        if (filmtitelSection) filmtitelSection.style.display = 'none';
-        if (kriterienSection) kriterienSection.style.display = 'none';
-        window.scrollTo(0,0);
+        detailView.style.position = 'fixed';
+        detailView.style.top = '0';
+        detailView.style.left = '0';
+        detailView.style.width = '100vw';
+        detailView.style.height = '100vh';
+        detailView.style.zIndex = '9999';
+        detailView.style.background = 'none';
+        detailView.style.padding = '0';
 
-        document.getElementById('detailBackBtn').onclick = () => {
+        // Modal-Overlay: Seite bleibt sichtbar, nur Modal drüber. Scrollposition merken!
+        lastScrollY = window.scrollY;
+        // Kein Scrollen im Hintergrund (optional, aber Modal ist overlay)
+        //document.body.style.overflow = 'hidden'; // Falls gewünscht, aber nicht gefordert
+
+        // Zeige Modal, blende KEINE Seite aus!
+
+        // Entferne alten Back-Button-Logik, stattdessen X oben rechts und Overlay-Klick
+        function closeModalAndRestoreScroll() {
             detailView.style.display = 'none';
-            if (filmtitelSection) filmtitelSection.style.display = 'block';
-            if (kriterienSection) kriterienSection.style.display = 'block';
-        };
+            //document.body.style.overflow = ''; // Falls gesetzt
+            window.scrollTo(0, lastScrollY);
+        }
+        document.getElementById('detailCloseBtn').onclick = closeModalAndRestoreScroll;
+        document.getElementById('detailModalOverlay').addEventListener('mousedown', function(e) {
+            if (e.target === this) {
+                closeModalAndRestoreScroll();
+            }
+        });
+
+        // Cast klickbar: Eventlistener für alle .cast-actor-clickable
+        setTimeout(() => {
+            const castSpans = detailView.querySelectorAll('.cast-actor-clickable');
+            castSpans.forEach(span => {
+                span.addEventListener('click', function(e) {
+                    // Setze Namen ins actorInput, Vorschläge ausblenden, Fehleranzeige zurücksetzen, Suche starten
+                    const actorName = decodeURIComponent(this.getAttribute('data-actor-name'));
+                    const actorInput = document.getElementById('actorInput');
+                    if (actorInput) {
+                        actorInput.value = actorName;
+                        actorInput.dataset.suggestionClicked = 'true';
+                        // Vorschläge beider Felder komplett entfernen
+                        let actorSuggestions = document.getElementById('actorSuggestions');
+                        let filmtitelSuggestions = document.getElementById('filmtitelSuggestions');
+                        if (actorSuggestions) { actorSuggestions.innerHTML = ''; actorSuggestions.style.display = 'none'; }
+                        if (filmtitelSuggestions) { filmtitelSuggestions.innerHTML = ''; filmtitelSuggestions.style.display = 'none'; }
+                        // Fehleranzeige zurücksetzen
+                        [actorInput].forEach(f => f.style.borderColor = '');
+                        let errorDiv = document.getElementById('kriterienError');
+                        if (errorDiv) {
+                            errorDiv.textContent = '';
+                            let warnImg = document.getElementById('kriterienWarnImg');
+                            if (warnImg) warnImg.remove();
+                        }
+                        // Detailansicht schließen, Suchansicht zeigen
+                        closeModalAndRestoreScroll();
+                        if (kriterienSection) kriterienSection.style.display = 'block';
+                        if (filmtitelSection) filmtitelSection.style.display = 'none';
+                        // Starte sofort Kriterien-Suche
+                        const kriterienSearchBtn = document.getElementById('kriterienSearchBtn');
+                        if (kriterienSearchBtn) {
+                            setTimeout(() => { kriterienSearchBtn.click(); }, 100);
+                        }
+                    }
+                });
+            });
+        }, 10);
     }
     const startSection = document.getElementById('startSection');
     const filmtitelSection = document.getElementById('filmtitelSection');
