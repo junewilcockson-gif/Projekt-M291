@@ -573,6 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isActor && !isGenre && !isType && !isYear) {
             [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = 'red');
             showWarning(errorDiv, 'Wähle mindestens ein Kriterium.');
+            kriterienResults.innerHTML = '';
             return;
         }
 
@@ -584,6 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!actorRegex.test(actorInput.value.trim())) {
                 actorInput.style.borderColor = 'red';
                 showWarning(errorDiv, 'Bitte gib einen gültigen Namen ein.');
+                kriterienResults.innerHTML = '';
                 return;
             }
         }
@@ -608,6 +610,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch {
                 actorInput.style.borderColor = 'red';
                 showWarning(errorDiv, 'Bitte gib einen gültigen Namen ein.');
+                kriterienResults.innerHTML = '';
                 return;
             }
         }
@@ -879,6 +882,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filmtitelInput.value.trim() === '') {
             filmtitelInput.style.borderColor = 'red';
             showWarning(errorDiv, 'Bitte gib einen gültigen Filmtitel ein.');
+            filmtitelResults.innerHTML = '';
             return;
         }
         // Neue Regex-Validierung für Filmtitel (lockerer, akzeptiert alle gängigen Zeichen)
@@ -889,6 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!filmtitelSuggestionClicked && !filmtitelRegex.test(filmtitelInput.value.trim())) {
             filmtitelInput.style.borderColor = 'red';
             showWarning(errorDiv, 'Bitte gib einen gültigen Filmtitel ein.');
+            filmtitelResults.innerHTML = '';
             return;
         }
         // TMDB-Abfrage: Suche sowohl Filme als auch Serien
