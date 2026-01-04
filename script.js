@@ -20,18 +20,24 @@ function showLoading(container) {
  * @param {string} text - Der Warntext.
  */
 function showWarning(errorDiv, text) {
-    errorDiv.textContent = text;
+    // Clear previous content
+    errorDiv.innerHTML = '';
     errorDiv.style.color = 'red';
+    // Create warning image first
     let warnImg = document.getElementById(errorDiv.id + '_warnImg');
     if (!warnImg) {
         warnImg = document.createElement('img');
         warnImg.id = errorDiv.id + '_warnImg';
         warnImg.src = 'assets/warnung.png';
         warnImg.style.maxWidth = '30px';
-        warnImg.style.marginLeft = '8px';
+        warnImg.style.marginRight = '8px';
         warnImg.style.verticalAlign = 'middle';
-        errorDiv.appendChild(warnImg);
     }
+    // Append image first, then text
+    errorDiv.appendChild(warnImg);
+    // Add text node after image
+    const textNode = document.createTextNode(text);
+    errorDiv.appendChild(textNode);
 }
 // --- Pagination Globals ---
 let currentPage = 1;
@@ -813,13 +819,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                         </div>`;
                     }).join('') +
+                    '</div>' +
+                    '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
+                    'Daten bereitgestellt von <a href="https://www.themoviedb.org/" target="_blank" rel="noopener" style="color:#888; text-decoration:underline;">TMDB</a>' +
                     '</div>';
                 // Helper function for onclick (global, for this context)
                 window.openDetailViewFromCard = function(jsonStr) {
                     openDetailView(JSON.parse(jsonStr));
                 }
             } else {
-                kriterienResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
+                kriterienResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>' +
+                  '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
+                  'Daten bereitgestellt von <a href="https://www.themoviedb.org/" target="_blank" rel="noopener" style="color:#888; text-decoration:underline;">TMDB</a>' +
+                  '</div>';
             }
             // Render pagination controls after results
             renderPaginationControls();
@@ -1018,13 +1030,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>`;
                         }).join('') +
+                        '</div>' +
+                        '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
+                        'Daten bereitgestellt von <a href="https://www.themoviedb.org/" target="_blank" rel="noopener" style="color:#888; text-decoration:underline;">TMDB</a>' +
                         '</div>';
                     // Helper function for onclick (global, for this context)
                     window.openDetailViewFromCard = function(jsonStr) {
                         openDetailView(JSON.parse(jsonStr));
                     }
                 } else {
-                    filmtitelResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
+                    filmtitelResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>' +
+                      '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
+                      'Daten bereitgestellt von <a href="https://www.themoviedb.org/" target="_blank" rel="noopener" style="color:#888; text-decoration:underline;">TMDB</a>' +
+                      '</div>';
                 }
                 // Render pagination controls after results
                 renderPaginationControls();
