@@ -1,3 +1,23 @@
+// --- Zentrale Warnungsanzeige ---
+/**
+ * Zeigt eine rote Warnung mit Bild im gegebenen Fehler-Div an.
+ * @param {HTMLElement} errorDiv - Das Fehler-Div.
+ * @param {string} text - Der Warntext.
+ */
+function showWarning(errorDiv, text) {
+    errorDiv.textContent = text;
+    errorDiv.style.color = 'red';
+    let warnImg = document.getElementById(errorDiv.id + '_warnImg');
+    if (!warnImg) {
+        warnImg = document.createElement('img');
+        warnImg.id = errorDiv.id + '_warnImg';
+        warnImg.src = 'assets/warnung.png';
+        warnImg.style.maxWidth = '30px';
+        warnImg.style.marginLeft = '8px';
+        warnImg.style.verticalAlign = 'middle';
+        errorDiv.appendChild(warnImg);
+    }
+}
 // --- Pagination Globals ---
 let currentPage = 1;
 let totalPages = 1;
@@ -222,7 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Kein spezielles Styling, nur minimal
         switchSearchBtn.style.display = 'none'; // Unsichtbar am Anfang
         // Kein fixed, keine Breite, kein Box-Shadow, keine Padding/Font etc.
-        document.body.insertBefore(switchSearchBtn, document.body.firstChild);
+        const headerSection = document.querySelector('header');
+        headerSection.insertAdjacentElement('afterend', switchSearchBtn);
     }
     // Klick-Event: wechsle zwischen filmtitelSection und kriterienSection
     switchSearchBtn.addEventListener('click', () => {
@@ -444,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
             kriterienSearchBtn.insertAdjacentElement('afterend', errorDiv);
         }
         errorDiv.textContent = '';
-        let warnImg = document.getElementById('kriterienWarnImg');
+        let warnImg = document.getElementById('kriterienError_warnImg');
         if (warnImg) warnImg.remove();
 
         // Welche Filter sind gesetzt?
@@ -456,16 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Mindestens ein Kriterium muss gesetzt sein
         if (!isActor && !isGenre && !isType && !isYear) {
             [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = 'red');
-            errorDiv.textContent = 'Wähle mindestens ein Kriterium.';
-            if (!warnImg) {
-                warnImg = document.createElement('img');
-                warnImg.id = 'kriterienWarnImg';
-                warnImg.src = 'assets/warnung.png';
-                warnImg.style.maxWidth = '30px';
-                warnImg.style.marginLeft = '8px';
-                warnImg.style.verticalAlign = 'middle';
-                errorDiv.appendChild(warnImg);
-            }
+            showWarning(errorDiv, 'Wähle mindestens ein Kriterium.');
             return;
         }
 
@@ -476,16 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const actorRegex = /^[A-Za-zÄÖÜäöüß]+(?:[ '-][A-Za-zÄÖÜäöüß]+)*$/;
             if (!actorRegex.test(actorInput.value.trim())) {
                 actorInput.style.borderColor = 'red';
-                errorDiv.textContent = 'Bitte gib einen gültigen Namen ein.';
-                if (!warnImg) {
-                    warnImg = document.createElement('img');
-                    warnImg.id = 'kriterienWarnImg';
-                    warnImg.src = 'assets/warnung.png';
-                    warnImg.style.maxWidth = '30px';
-                    warnImg.style.marginLeft = '8px';
-                    warnImg.style.verticalAlign = 'middle';
-                    errorDiv.appendChild(warnImg);
-                }
+                showWarning(errorDiv, 'Bitte gib einen gültigen Namen ein.');
                 return;
             }
         }
@@ -509,22 +512,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 actorId = data.results[0].id;
             } catch {
                 actorInput.style.borderColor = 'red';
-                errorDiv.textContent = 'Bitte gib einen gültigen Namen ein.';
-                if (!warnImg) {
-                    warnImg = document.createElement('img');
-                    warnImg.id = 'kriterienWarnImg';
-                    warnImg.src = 'assets/warnung.png';
-                    warnImg.style.maxWidth = '30px';
-                    warnImg.style.marginLeft = '8px';
-                    warnImg.style.verticalAlign = 'middle';
-                    errorDiv.appendChild(warnImg);
-                }
+                showWarning(errorDiv, 'Bitte gib einen gültigen Namen ein.');
                 return;
             }
         }
 
         errorDiv.textContent = '';
-        if (warnImg) warnImg.remove();
+        let warnImg2 = document.getElementById('kriterienError_warnImg');
+        if (warnImg2) warnImg2.remove();
 
         // Helper für HTTP-Fehler
         function handleHTTPError(response) {
@@ -736,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Render pagination controls after results
             renderPaginationControls();
         } catch (error) {
-            errorDiv.textContent = error.message;
+            showWarning(errorDiv, error.message);
             kriterienResults.innerHTML = '';
             // Still render pagination for error state
             renderPaginationControls();
@@ -770,24 +765,13 @@ document.addEventListener('DOMContentLoaded', () => {
             filmtitelSearchBtn.insertAdjacentElement('afterend', errorDiv);
         }
         errorDiv.textContent = '';
-        // Entferne Warnungsbild falls vorhanden
-        let warnImg = document.getElementById('filmtitelWarnImg');
+        let warnImg = document.getElementById('filmtitelError_warnImg');
         if (warnImg) warnImg.remove();
         filmtitelSuggestions.innerHTML = '';
         filmtitelResults.innerHTML = '';
         if (filmtitelInput.value.trim() === '') {
             filmtitelInput.style.borderColor = 'red';
-            errorDiv.textContent = 'Bitte gib einen gültigen Filmtitel ein.';
-            // Warnungsbild hinzufügen
-            if (!warnImg) {
-                warnImg = document.createElement('img');
-                warnImg.id = 'filmtitelWarnImg';
-                warnImg.src = 'assets/warnung.png';
-                warnImg.style.maxWidth = '30px';
-                warnImg.style.marginLeft = '8px';
-                warnImg.style.verticalAlign = 'middle';
-                errorDiv.appendChild(warnImg);
-            }
+            showWarning(errorDiv, 'Bitte gib einen gültigen Filmtitel ein.');
             return;
         }
         // Neue Regex-Validierung für Filmtitel (lockerer, akzeptiert alle gängigen Zeichen)
@@ -797,16 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Regex nur prüfen, wenn kein Vorschlag geklickt wurde
         if (!filmtitelSuggestionClicked && !filmtitelRegex.test(filmtitelInput.value.trim())) {
             filmtitelInput.style.borderColor = 'red';
-            errorDiv.textContent = 'Bitte gib einen gültigen Filmtitel ein.';
-            if (!warnImg) {
-                warnImg = document.createElement('img');
-                warnImg.id = 'filmtitelWarnImg';
-                warnImg.src = 'assets/warnung.png';
-                warnImg.style.maxWidth = '30px';
-                warnImg.style.marginLeft = '8px';
-                warnImg.style.verticalAlign = 'middle';
-                errorDiv.appendChild(warnImg);
-            }
+            showWarning(errorDiv, 'Bitte gib einen gültigen Filmtitel ein.');
             return;
         }
         // TMDB-Abfrage: Suche sowohl Filme als auch Serien
@@ -847,22 +822,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Nichts gefunden?
                 if (results.length === 0) {
                     filmtitelInput.style.borderColor = 'red';
-                    errorDiv.textContent = 'Bitte gib einen gültigen Filmtitel ein.';
-                    if (!warnImg) {
-                        warnImg = document.createElement('img');
-                        warnImg.id = 'filmtitelWarnImg';
-                        warnImg.src = 'assets/warnung.png';
-                        warnImg.style.maxWidth = '30px';
-                        warnImg.style.marginLeft = '8px';
-                        warnImg.style.verticalAlign = 'middle';
-                        errorDiv.appendChild(warnImg);
-                    }
+                    showWarning(errorDiv, 'Bitte gib einen gültigen Filmtitel ein.');
                     filmtitelResults.innerHTML = '';
                     renderPaginationControls();
                     return;
                 }
                 errorDiv.textContent = '';
-                if (warnImg) warnImg.remove();
+                let warnImg2 = document.getElementById('filmtitelError_warnImg');
+                if (warnImg2) warnImg2.remove();
                 // Sortiere nach Release/First-Air-Date absteigend
                 results.sort((a, b) => {
                     let dateA = a.release_date || a.first_air_date || '';
@@ -967,7 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Render pagination controls after results
                 renderPaginationControls();
             } catch (error) {
-                errorDiv.textContent = error.message;
+                showWarning(errorDiv, error.message);
                 filmtitelResults.innerHTML = '';
                 renderPaginationControls();
             }
@@ -981,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorDiv = document.getElementById('kriterienError');
         if (errorDiv) {
             errorDiv.textContent = '';
-            let warnImg = document.getElementById('kriterienWarnImg');
+            let warnImg = document.getElementById('kriterienError_warnImg');
             if (warnImg) {
                 warnImg.remove();
             }
@@ -1024,7 +991,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorDiv = document.getElementById('filmtitelError');
         if (errorDiv) {
             errorDiv.textContent = '';
-            let warnImg = document.getElementById('filmtitelWarnImg');
+            let warnImg = document.getElementById('filmtitelError_warnImg');
             if (warnImg) {
                 warnImg.remove();
             }
