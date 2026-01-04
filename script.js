@@ -1,3 +1,18 @@
+// --- Lade-GIF-Anzeige ---
+/**
+ * Zeigt ein zentriertes Lade-GIF im angegebenen Container an.
+ * @param {HTMLElement} container - Das Container-Element, in das das Lade-GIF eingefügt wird.
+ */
+function showLoading(container) {
+    container.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = 'assets/loading.gif';
+    img.alt = 'Lädt...';
+    img.style.display = 'block';
+    img.style.margin = '1em auto';
+    img.style.maxWidth = '80px';
+    container.appendChild(img);
+}
 // --- Zentrale Warnungsanzeige ---
 /**
  * Zeigt eine rote Warnung mit Bild im gegebenen Fehler-Div an.
@@ -595,6 +610,10 @@ document.addEventListener('DOMContentLoaded', () => {
         let warnImg2 = document.getElementById('kriterienError_warnImg');
         if (warnImg2) warnImg2.remove();
 
+        // Lade-GIF vor Start der API-Abfrage anzeigen
+        showLoading(kriterienResults);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
         // Helper für HTTP-Fehler
         function handleHTTPError(response) {
             if (!response.ok) {
@@ -821,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filmtitelSearchBtn.insertAdjacentElement('afterend', filmtitelResults);
     }
 
-    filmtitelSearchBtn.addEventListener('click', () => {
+    filmtitelSearchBtn.addEventListener('click', async () => {
         // Reset to first page for new search
         if (!isPaginating) {
             currentPage = 1;
@@ -842,7 +861,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let warnImg = document.getElementById('filmtitelError_warnImg');
         if (warnImg) warnImg.remove();
         filmtitelSuggestions.innerHTML = '';
-        filmtitelResults.innerHTML = '';
+        // Lade-GIF vor Start der API-Abfrage anzeigen
+        showLoading(filmtitelResults);
+        await new Promise(resolve => setTimeout(resolve, 1500));
         if (filmtitelInput.value.trim() === '') {
             filmtitelInput.style.borderColor = 'red';
             showWarning(errorDiv, 'Bitte gib einen gültigen Filmtitel ein.');
