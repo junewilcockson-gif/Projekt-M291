@@ -1,3 +1,8 @@
+// --- Pagination Globals ---
+let currentPage = 1;
+let totalPages = 1;
+let isPaginating = false;
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Detailansicht für Karten ---
     // Speichere die letzte Scrollposition global für das Modal
@@ -423,6 +428,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Überarbeiteter Kriterien-Suchblock: stabil, korrekt, async/await, stackable, alle Anforderungen
     kriterienSearchBtn.addEventListener('click', async () => {
+        // Reset to first page for new search
+        if (!isPaginating) {
+            currentPage = 1;
+        }
+        isPaginating = false;
         const actorInput = document.getElementById('actorInput');
         [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = '');
         let errorDiv = document.getElementById('kriterienError');
@@ -541,8 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     language: 'de-DE',
                     sort_by: 'release_date.desc',
                     include_adult: 'false',
-                    include_video: 'false',
-                    page: 1
+                    include_video: 'false'
                 };
                 // Genre-Filter
                 if (isGenre) {
@@ -562,12 +571,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (ep === 'movie' && isActor && actorId) {
                     params.with_cast = actorId;
                 }
+                // Always set page parameter for pagination
+                params.page = currentPage;
                 // --- URL bauen ---
                 const url = new URL(`https://api.themoviedb.org/3/discover/${ep}`);
                 Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
                 const resp = await fetch(url);
                 handleHTTPError(resp);
                 const data = await resp.json();
+                // Store pagination info
+                totalPages = data.total_pages || 1;
                 let results = [];
                 if (data?.results) {
                     results = data.results.map(r => ({ ...r, __type: ep }));
@@ -720,9 +733,13 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 kriterienResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
             }
+            // Render pagination controls after results
+            renderPaginationControls();
         } catch (error) {
             errorDiv.textContent = error.message;
             kriterienResults.innerHTML = '';
+            // Still render pagination for error state
+            renderPaginationControls();
         }
     });
 
@@ -736,6 +753,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     filmtitelSearchBtn.addEventListener('click', () => {
+        // Reset to first page for new search
+        if (!isPaginating) {
+            currentPage = 1;
+        }
+        isPaginating = false;
         // Fehleranzeige zurücksetzen
         filmtitelInput.style.borderColor = '';
         // Fehlermeldung div erzeugen, falls nicht vorhanden
@@ -789,8 +811,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // TMDB-Abfrage: Suche sowohl Filme als auch Serien
         const query = filmtitelInput.value.trim();
-        const urlMovie = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(query)}&page=1&include_adult=false`;
-        const urlTV = `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(query)}&page=1&include_adult=false`;
+        // Always use currentPage
+        const urlMovie = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(query)}&page=${currentPage}&include_adult=false`;
+        const urlTV = `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&language=de-DE&query=${encodeURIComponent(query)}&page=${currentPage}&include_adult=false`;
         function handleHTTPError(response) {
             if (!response.ok) {
                 let msg = '';
@@ -812,6 +835,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleHTTPError(respMovie);
                 handleHTTPError(respTV);
                 const [dataMovie, dataTV] = await Promise.all([respMovie.json(), respTV.json()]);
+                // Store pagination info (from first successful response)
+                totalPages = (dataMovie && dataMovie.total_pages) ? dataMovie.total_pages : ((dataTV && dataTV.total_pages) ? dataTV.total_pages : 1);
                 let results = [];
                 if (dataMovie && Array.isArray(dataMovie.results)) {
                     results = results.concat(dataMovie.results.map(r => ({ ...r, __type: 'movie' })));
@@ -833,6 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         errorDiv.appendChild(warnImg);
                     }
                     filmtitelResults.innerHTML = '';
+                    renderPaginationControls();
                     return;
                 }
                 errorDiv.textContent = '';
@@ -938,9 +964,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     filmtitelResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>';
                 }
+                // Render pagination controls after results
+                renderPaginationControls();
             } catch (error) {
                 errorDiv.textContent = error.message;
                 filmtitelResults.innerHTML = '';
+                renderPaginationControls();
             }
         })();
     });
@@ -1214,3 +1243,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     updateSwitchSearchBtnVisibility();
 });
+
+// --- Pagination controls rendering ---
+function renderPaginationControls() {
+  const container = document.getElementById("pagination");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "← Vorherige Seite";
+  prevBtn.disabled = currentPage <= 1;
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      isPaginating = true;
+      currentPage--;
+      performSearch();
+    }
+  };
+
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "Nächste Seite →";
+  nextBtn.disabled = currentPage >= totalPages;
+  nextBtn.onclick = () => {
+    if (currentPage < totalPages) {
+      isPaginating = true;
+      currentPage++;
+      performSearch();
+    }
+  };
+
+  const info = document.createElement("span");
+  info.textContent = ` Seite ${currentPage} von ${totalPages} `;
+
+  container.appendChild(prevBtn);
+  container.appendChild(info);
+  container.appendChild(nextBtn);
+}
+
+// Helper to trigger the correct search for pagination
+function performSearch() {
+  // Try to detect which search section is visible and trigger the respective search
+  const filmtitelSection = document.getElementById('filmtitelSection');
+  const kriterienSection = document.getElementById('kriterienSection');
+  if (filmtitelSection && filmtitelSection.style.display !== 'none') {
+    // Trigger filmtitel search
+    document.getElementById('filmtitelSearchBtn').click();
+  } else if (kriterienSection && kriterienSection.style.display !== 'none') {
+    // Trigger kriterien search
+    document.getElementById('kriterienSearchBtn').click();
+  }
+}
