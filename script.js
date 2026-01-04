@@ -254,17 +254,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const filmtitelSection = document.getElementById('filmtitelSection');
     const kriterienSection = document.getElementById('kriterienSection');
     // --- Button "Zur anderen Suchoption" ---
-    // Button erstellen, aber zunächst unsichtbar und ohne spezielles Styling
+    // Button erstellen, Bootstrap-Klassen hinzufügen
     let switchSearchBtn = document.getElementById('switchSearchBtn');
     if (!switchSearchBtn) {
         switchSearchBtn = document.createElement('button');
         switchSearchBtn.id = 'switchSearchBtn';
         switchSearchBtn.textContent = 'Zur anderen Suchoption';
-        // Kein spezielles Styling, nur minimal
+        switchSearchBtn.className = 'btn btn-secondary mb-3';
         switchSearchBtn.style.display = 'none'; // Unsichtbar am Anfang
-        // Kein fixed, keine Breite, kein Box-Shadow, keine Padding/Font etc.
         const headerSection = document.querySelector('header');
         headerSection.insertAdjacentElement('afterend', switchSearchBtn);
+    } else {
+        // Falls schon vorhanden, Bootstrap-Klassen sicherstellen
+        switchSearchBtn.classList.add('btn', 'btn-secondary', 'mb-3');
     }
 
     // Dynamischer Header für aktive Suchoption
@@ -335,11 +337,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Prepare for API usage: clear genreSelect and typeSelect options
     const genreSelect = document.getElementById('genreSelect');
     const typeSelect = document.getElementById('typeSelect');
+    // Bootstrap-Klassen zu Selects hinzufügen
+    genreSelect.classList.add('form-select');
+    typeSelect.classList.add('form-select');
     genreSelect.innerHTML = '';
     typeSelect.innerHTML = '';
 
     // Add div for filmtitel suggestions below filmtitelInput
     const filmtitelInput = document.getElementById('filmtitelInput');
+    // Bootstrap-Klasse zu Filmtitel-Input
+    filmtitelInput.classList.add('form-control');
     let filmtitelSuggestions = document.getElementById('filmtitelSuggestions');
     if (!filmtitelSuggestions) {
         filmtitelSuggestions = document.createElement('div');
@@ -407,22 +414,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Fortschrittsbalken für Kriterien-Suche ---
     const kriterienProgressBarContainer = document.createElement('div');
     kriterienProgressBarContainer.id = 'kriterienProgressContainer';
+    kriterienProgressBarContainer.className = 'progress'; // Bootstrap-Container
     kriterienProgressBarContainer.style.width = '100%';
     kriterienProgressBarContainer.style.maxWidth = '400px';
     kriterienProgressBarContainer.style.margin = '0.8em 0';
     const kriterienProgressBar = document.createElement('div');
-    kriterienProgressBar.style.background = '#e0e0e0';
-    kriterienProgressBar.style.borderRadius = '4px';
-    kriterienProgressBar.style.height = '8px';
-    kriterienProgressBar.style.width = '100%';
-    kriterienProgressBar.style.overflow = 'hidden';
-    const kriterienProgressFill = document.createElement('div');
-    kriterienProgressFill.id = 'kriterienProgressFill';
-    kriterienProgressFill.style.background = '#555';
-    kriterienProgressFill.style.height = '100%';
-    kriterienProgressFill.style.width = '0%';
-    kriterienProgressFill.style.borderRadius = '4px';
-    kriterienProgressBar.appendChild(kriterienProgressFill);
+    // Bootstrap: progress-bar, dynamisch width
+    kriterienProgressBar.id = 'kriterienProgressFill';
+    kriterienProgressBar.className = 'progress-bar';
+    kriterienProgressBar.setAttribute('role', 'progressbar');
+    kriterienProgressBar.setAttribute('aria-valuemin', '0');
+    kriterienProgressBar.setAttribute('aria-valuemax', '100');
+    kriterienProgressBar.style.width = '0%';
     kriterienProgressBarContainer.appendChild(kriterienProgressBar);
 
     // Füge den Fortschrittsbalken direkt unter dem Switch-Button ein
@@ -434,7 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateKriterienProgress(stepIndex) {
         const totalSteps = kriterienFields.length;
         const percent = Math.round(((stepIndex + 1) / totalSteps) * 100);
-        kriterienProgressFill.style.width = percent + '%';
+        kriterienProgressBar.style.width = percent + '%';
+        kriterienProgressBar.setAttribute('aria-valuenow', percent);
     }
 
     // Rufe updateKriterienProgress immer auf, wenn showKriterienStep ausgeführt wird
@@ -1061,6 +1065,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Ergänzung: Eventlistener für input und change auf alle Formularfelder
     const actorInput = document.getElementById('actorInput');
+    // Bootstrap-Klasse zu actorInput
+    actorInput.classList.add('form-control');
     function removeKriterienError() {
         [actorInput, genreSelect, typeSelect, yearFrom, yearTo].forEach(f => f.style.borderColor = '');
         const errorDiv = document.getElementById('kriterienError');
@@ -1116,6 +1122,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     filmtitelInput.addEventListener('input', removeFilmtitelError);
+
+    // Jahr-Inputs Bootstrap-Klasse
+    yearFrom.classList.add('form-control');
+    yearTo.classList.add('form-control');
 
     // Vorschläge beim Tippen: Filmtitel (Dropdown-ähnliche Auswahl)
     // --- Vorschlagslogik für FilmtitelInput ---
@@ -1347,6 +1357,7 @@ function renderPaginationControls() {
   const prevBtn = document.createElement("button");
   prevBtn.textContent = "← Vorherige Seite";
   prevBtn.disabled = currentPage <= 1;
+  prevBtn.className = "btn btn-outline-secondary me-2";
   prevBtn.onclick = () => {
     if (currentPage > 1) {
       isPaginating = true;
@@ -1358,6 +1369,7 @@ function renderPaginationControls() {
   const nextBtn = document.createElement("button");
   nextBtn.textContent = "Nächste Seite →";
   nextBtn.disabled = currentPage >= totalPages;
+  nextBtn.className = "btn btn-outline-secondary ms-2";
   nextBtn.onclick = () => {
     if (currentPage < totalPages) {
       isPaginating = true;
@@ -1368,6 +1380,7 @@ function renderPaginationControls() {
 
   const info = document.createElement("span");
   info.textContent = ` Seite ${currentPage} von ${totalPages} `;
+  info.style.verticalAlign = "middle";
 
   container.appendChild(prevBtn);
   container.appendChild(info);
