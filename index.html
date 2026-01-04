@@ -4,55 +4,56 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Filmsuche</title>
-   
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-    <section>
-        <header>
+    <div class="container my-4">
+        <header class="mb-4">
             <h1>Finde deinen Film</h1>
             <p>Suche nach einem Filmtitel oder entdecke Filme anhand deiner Kriterien.</p>
         </header>
-    </section>
-    <section id="startSection">
-        <button id="filmtitelBtn">Suche nach Titel</button>
-        <button id="kriterienBtn">Kriterien Suche</button>
-    </section>
 
-    <section id="filmtitelSection" style="display:none;">
-        <input type="text" id="filmtitelInput" placeholder="Titel eingeben"/>
-        <button id="filmtitelSearchBtn">Suchen</button>
-    </section>
+        <section id="startSection" class="mb-3">
+            <button id="filmtitelBtn" class="btn btn-primary me-2">Suche nach Titel</button>
+            <button id="kriterienBtn" class="btn btn-secondary">Kriterien Suche</button>
+        </section>
 
-    <section id="kriterienSection" style="display:none;">
-        <div id="actorDiv">
-            <label for="actorInput">Schauspieler:</label>
-            <input type="text" id="actorInput" placeholder="Name"/>
+        <section id="filmtitelSection" style="display:none;" class="mb-3">
+            <input type="text" id="filmtitelInput" placeholder="Titel eingeben" class="form-control mb-2"/>
+            <button id="filmtitelSearchBtn" class="btn btn-success">Suchen</button>
+        </section>
 
-        </div>
-        <div id="genreDiv" style="display:none;">
-            <label for="genreSelect">Genre:</label>
-            <select id="genreSelect">
-                <option>Wähle Genre</option>
-            </select>
-        </div>
-        <div id="yearDiv" style="display:none;">
-            <label for="yearFrom">Jahr von:</label>
-            <input type="range" id="yearFrom" min="1900" max="2040" value="1900" />
-            <span id="yearFromValue">1900</span>
-            <label for="yearTo">Jahr bis:</label>
-            <input type="range" id="yearTo" min="1900" max="2040" value="2040" />
-            <span id="yearToValue">2040</span>
-        </div>
-        <div id="typeDiv" style="display:none;">
-            <label for="typeSelect">Typ:</label>
-            <select id="typeSelect">
-                <option>Wähle Typ</option>
-            </select>
-        </div>
-        <button id="kriterienNextBtn" style="display:none;">skip</button>
-        <button id="kriterienSearchBtn" style="display:none;">Suchen</button>
-    </section>
+        <section id="kriterienSection" style="display:none;" class="mb-3">
+            <div id="actorDiv" class="mb-2">
+                <label for="actorInput" class="form-label">Schauspieler:</label>
+                <input type="text" id="actorInput" placeholder="Name" class="form-control"/>
+            </div>
+            <div id="genreDiv" style="display:none;" class="mb-2">
+                <label for="genreSelect" class="form-label">Genre:</label>
+                <select id="genreSelect" class="form-select">
+                    <option>Wähle Genre</option>
+                </select>
+            </div>
+            <div id="yearDiv" style="display:none;" class="mb-2">
+                <label for="yearFrom" class="form-label">Jahr von:</label>
+                <input type="range" id="yearFrom" min="1900" max="2040" value="1900" class="form-range"/>
+                <span id="yearFromValue">1900</span>
+                <label for="yearTo" class="form-label ms-2">Jahr bis:</label>
+                <input type="range" id="yearTo" min="1900" max="2040" value="2040" class="form-range"/>
+                <span id="yearToValue">2040</span>
+            </div>
+            <div id="typeDiv" style="display:none;" class="mb-2">
+                <label for="typeSelect" class="form-label">Typ:</label>
+                <select id="typeSelect" class="form-select">
+                    <option>Wähle Typ</option>
+                </select>
+            </div>
+            <button id="kriterienNextBtn" style="display:none;" class="btn btn-outline-secondary me-2">skip</button>
+            <button id="kriterienSearchBtn" style="display:none;" class="btn btn-success">Suchen</button>
+        </section>
+    </div>
 
     <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
