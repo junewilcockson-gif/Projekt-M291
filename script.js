@@ -411,25 +411,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Fortschrittsbalken für Kriterien-Suche ---
+    // --- Fortschrittsbalken für Kriterien-Suche (ohne Bootstrap) ---
     const kriterienProgressBarContainer = document.createElement('div');
     kriterienProgressBarContainer.id = 'kriterienProgressContainer';
-    kriterienProgressBarContainer.className = 'progress'; // Bootstrap-Container
+    // Keine Bootstrap-Klasse!
     kriterienProgressBarContainer.style.width = '100%';
     kriterienProgressBarContainer.style.maxWidth = '400px';
     kriterienProgressBarContainer.style.margin = '0.8em 0';
+    kriterienProgressBarContainer.style.background = '#e0e0e0';
+    kriterienProgressBarContainer.style.borderRadius = '6px';
+    kriterienProgressBarContainer.style.overflow = 'hidden';
+    kriterienProgressBarContainer.style.height = '12px';
+    kriterienProgressBarContainer.style.position = 'relative';
+    // Fortschrittsbalken-Füllung
     const kriterienProgressBar = document.createElement('div');
-    // Bootstrap: progress-bar, dynamisch width
     kriterienProgressBar.id = 'kriterienProgressFill';
-    kriterienProgressBar.className = 'progress-bar';
-    kriterienProgressBar.setAttribute('role', 'progressbar');
-    kriterienProgressBar.setAttribute('aria-valuemin', '0');
-    kriterienProgressBar.setAttribute('aria-valuemax', '100');
+    // Keine Bootstrap-Klasse!
+    kriterienProgressBar.style.height = '100%';
     kriterienProgressBar.style.width = '0%';
+    kriterienProgressBar.style.background = '#555';
+    kriterienProgressBar.style.transition = 'width 0.3s';
     kriterienProgressBarContainer.appendChild(kriterienProgressBar);
 
-    // Füge den Fortschrittsbalken direkt unter dem Switch-Button ein
-    switchSearchBtn.insertAdjacentElement('afterend', kriterienProgressBarContainer);
+    // Füge den Fortschrittsbalken direkt unter dem aktiven Such-Titel ein
+    if (activeSearchHeader) {
+        activeSearchHeader.insertAdjacentElement('afterend', kriterienProgressBarContainer);
+    } else {
+        switchSearchBtn.insertAdjacentElement('afterend', kriterienProgressBarContainer);
+    }
     // Fortschrittsbalken zu Beginn ausblenden (nur bei Kriterien-Suche anzeigen)
     kriterienProgressBarContainer.style.display = 'none';
 
@@ -438,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalSteps = kriterienFields.length;
         const percent = Math.round(((stepIndex + 1) / totalSteps) * 100);
         kriterienProgressBar.style.width = percent + '%';
-        kriterienProgressBar.setAttribute('aria-valuenow', percent);
+        // Keine aria-Attribute nötig, keine Bootstrap!
     }
 
     // Rufe updateKriterienProgress immer auf, wenn showKriterienStep ausgeführt wird
