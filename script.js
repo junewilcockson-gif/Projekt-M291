@@ -793,15 +793,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         const ratingBarWidth = Math.round((voteAverage / 10) * 100);
                         const ratingValue = voteAverage.toFixed(1);
                         const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
-                        // click handler for detail view
+                        // click handler for detail view via data-item attribute
                         const itemJson = encodeURIComponent(JSON.stringify(item));
-                        return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;">
-                            <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer"
-                                onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>
+                        return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;" data-item="${itemJson}">
+                            <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer">
                             <div class="card-info" style="flex: 1; padding: 0 1em; display: flex; flex-direction: column; justify-content: flex-start;">
                                 <div style="margin-bottom: 0.3em;">
-                                    <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer"
-                                        onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>${title}</div>
+                                    <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer">${title}</div>
                                 </div>
                                 <div style="font-size:1em; color:#444; margin-bottom:0.6em;">${year}</div>
 
@@ -830,10 +828,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
                     'Daten bereitgestellt von <a href="https://www.themoviedb.org/" target="_blank" rel="noopener" style="color:#888; text-decoration:underline;">TMDB</a>' +
                     '</div>';
-                // Helper function for onclick (global, for this context)
-                window.openDetailViewFromCard = function(jsonStr) {
-                    openDetailView(JSON.parse(jsonStr));
-                }
             } else {
                 kriterienResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>' +
                   '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
@@ -842,6 +836,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             // Render pagination controls after results
             renderPaginationControls();
+            // Event Delegation für Detailansicht (nur einmal pro Render)
+            if (!kriterienResults.dataset.eventDelegation) {
+                kriterienResults.addEventListener('click', function(e) {
+                    let card = e.target.closest('.media-card');
+                    if (card && card.hasAttribute('data-item')) {
+                        try {
+                            const item = JSON.parse(decodeURIComponent(card.getAttribute('data-item')));
+                            window.openDetailViewFromCard = function() {}; // dummy, falls alt aufgerufen
+                            openDetailView(item);
+                        } catch (err) {}
+                    }
+                });
+                kriterienResults.dataset.eventDelegation = 'true';
+            }
         } catch (error) {
             showWarning(errorDiv, error.message);
             kriterienResults.innerHTML = '';
@@ -1006,15 +1014,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             const ratingBarWidth = Math.round((voteAverage / 10) * 100);
                             const ratingValue = voteAverage.toFixed(1);
                             const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
-                            // click handler for detail view
+                            // click handler for detail view via data-item attribute
                             const itemJson = encodeURIComponent(JSON.stringify(item));
-                            return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;">
-                                <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer"
-                                    onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>
+                            return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;" data-item="${itemJson}">
+                                <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer">
                                 <div class="card-info" style="flex: 1; padding: 0 1em; display: flex; flex-direction: column; justify-content: flex-start;">
                                     <div style="margin-bottom: 0.3em;">
-                                        <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer"
-                                            onclick='window.openDetailViewFromCard && window.openDetailViewFromCard(decodeURIComponent("${itemJson}"))'>${title}</div>
+                                        <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer">${title}</div>
                                     </div>
                                     <div style="font-size:1em; color:#444; margin-bottom:0.6em;">${year}</div>
 
@@ -1043,10 +1049,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
                         'Daten bereitgestellt von <a href="https://www.themoviedb.org/" target="_blank" rel="noopener" style="color:#888; text-decoration:underline;">TMDB</a>' +
                         '</div>';
-                    // Helper function for onclick (global, for this context)
-                    window.openDetailViewFromCard = function(jsonStr) {
-                        openDetailView(JSON.parse(jsonStr));
-                    }
                 } else {
                     filmtitelResults.innerHTML = '<p>Keine Ergebnisse gefunden.</p>' +
                       '<div style="margin-top: 1.5em; text-align: right; font-size: 0.9em; color: #888;">' +
@@ -1055,6 +1057,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 // Render pagination controls after results
                 renderPaginationControls();
+                // Event Delegation für Detailansicht (nur einmal pro Render)
+                if (!filmtitelResults.dataset.eventDelegation) {
+                    filmtitelResults.addEventListener('click', function(e) {
+                        let card = e.target.closest('.media-card');
+                        if (card && card.hasAttribute('data-item')) {
+                            try {
+                                const item = JSON.parse(decodeURIComponent(card.getAttribute('data-item')));
+                                window.openDetailViewFromCard = function() {}; // dummy, falls alt aufgerufen
+                                openDetailView(item);
+                            } catch (err) {}
+                        }
+                    });
+                    filmtitelResults.dataset.eventDelegation = 'true';
+                }
             } catch (error) {
                 showWarning(errorDiv, error.message);
                 filmtitelResults.innerHTML = '';
