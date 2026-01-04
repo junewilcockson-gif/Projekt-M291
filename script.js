@@ -322,6 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startSection.style.display = 'none';
         filmtitelSection.style.display = 'block';
         kriterienSection.style.display = 'none';
+        kriterienProgressBarContainer.style.display = 'none';
         updateSwitchSearchBtnVisibility();
     });
 
@@ -329,6 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startSection.style.display = 'none';
         kriterienSection.style.display = 'block';
         filmtitelSection.style.display = 'none';
+        kriterienProgressBarContainer.style.display = 'block';
         showKriterienStep(0);
         updateSwitchSearchBtnVisibility();
     });
@@ -343,14 +345,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Positioniere den Skip-Button unter dem aktuell untersten sichtbaren Feld
-      if (stepIndex < kriterienFields.length - 1) {
-    kriterienNextBtn.style.display = 'inline-block';
-    kriterienSearchBtn.style.display = 'none';
-} else {
-    kriterienNextBtn.style.display = 'none';
-    kriterienSearchBtn.style.display = 'inline-block';
-}
+        if (stepIndex < kriterienFields.length - 1) {
+            kriterienNextBtn.style.display = 'inline-block';
+            kriterienSearchBtn.style.display = 'none';
+        } else {
+            kriterienNextBtn.style.display = 'none';
+            kriterienSearchBtn.style.display = 'inline-block';
+        }
     }
+
+    // --- Fortschrittsbalken für Kriterien-Suche ---
+    const kriterienProgressBarContainer = document.createElement('div');
+    kriterienProgressBarContainer.id = 'kriterienProgressContainer';
+    kriterienProgressBarContainer.style.width = '100%';
+    kriterienProgressBarContainer.style.maxWidth = '400px';
+    kriterienProgressBarContainer.style.margin = '0.8em 0';
+    const kriterienProgressBar = document.createElement('div');
+    kriterienProgressBar.style.background = '#e0e0e0';
+    kriterienProgressBar.style.borderRadius = '4px';
+    kriterienProgressBar.style.height = '8px';
+    kriterienProgressBar.style.width = '100%';
+    kriterienProgressBar.style.overflow = 'hidden';
+    const kriterienProgressFill = document.createElement('div');
+    kriterienProgressFill.id = 'kriterienProgressFill';
+    kriterienProgressFill.style.background = '#555';
+    kriterienProgressFill.style.height = '100%';
+    kriterienProgressFill.style.width = '0%';
+    kriterienProgressFill.style.borderRadius = '4px';
+    kriterienProgressBar.appendChild(kriterienProgressFill);
+    kriterienProgressBarContainer.appendChild(kriterienProgressBar);
+
+    // Füge den Fortschrittsbalken direkt unter dem Switch-Button ein
+    switchSearchBtn.insertAdjacentElement('afterend', kriterienProgressBarContainer);
+    // Fortschrittsbalken zu Beginn ausblenden (nur bei Kriterien-Suche anzeigen)
+    kriterienProgressBarContainer.style.display = 'none';
+
+    // Funktion zum Aktualisieren des Fortschrittsbalkens
+    function updateKriterienProgress(stepIndex) {
+        const totalSteps = kriterienFields.length;
+        const percent = Math.round(((stepIndex + 1) / totalSteps) * 100);
+        kriterienProgressFill.style.width = percent + '%';
+    }
+
+    // Rufe updateKriterienProgress immer auf, wenn showKriterienStep ausgeführt wird
+    const originalShowKriterienStep = showKriterienStep;
+    showKriterienStep = function(stepIndex) {
+        originalShowKriterienStep(stepIndex);
+        updateKriterienProgress(stepIndex);
+    };
+
+    // Initialisieren beim ersten Schritt
+    updateKriterienProgress(currentKriterienStep);
 
     // Skip-Button klick Event: nächstes Feld anzeigen, auch wenn das aktuelle leer ist
     kriterienNextBtn.addEventListener('click', () => {
@@ -1198,6 +1243,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const filmtitelSection = document.getElementById('filmtitelSection');
     const kriterienSection = document.getElementById('kriterienSection');
     const switchSearchBtn = document.getElementById('switchSearchBtn');
+    const startSection = document.getElementById('startSection');
+    const kriterienProgressBarContainer = document.getElementById('kriterienProgressContainer');
     function updateSwitchSearchBtnVisibility() {
         if (
             (filmtitelSection && filmtitelSection.style.display !== 'none') ||
@@ -1209,6 +1256,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     updateSwitchSearchBtnVisibility();
+    // Fortschrittsbalken bei Startseite ausblenden
+    if (startSection && startSection.style.display !== 'none' && kriterienProgressBarContainer) {
+        kriterienProgressBarContainer.style.display = 'none';
+    }
+    // Falls bei initialem Laden eine Suchoption aktiv ist, den Balken entsprechend anzeigen/ausblenden
+    if (kriterienSection && kriterienSection.style.display !== 'none' && kriterienProgressBarContainer) {
+        kriterienProgressBarContainer.style.display = 'block';
+    } else if (filmtitelSection && filmtitelSection.style.display !== 'none' && kriterienProgressBarContainer) {
+        kriterienProgressBarContainer.style.display = 'none';
+    }
 });
 
 // --- Pagination controls rendering ---
