@@ -251,11 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filmtitelSection && filmtitelSection.style.display !== 'none') {
             filmtitelSection.style.display = 'none';
             kriterienSection.style.display = 'block';
+            kriterienProgressBarContainer.style.display = 'block';
         }
         // Wenn Kriterien-Sektion sichtbar, zu Filmtitel wechseln
         else if (kriterienSection && kriterienSection.style.display !== 'none') {
             kriterienSection.style.display = 'none';
             filmtitelSection.style.display = 'block';
+            kriterienProgressBarContainer.style.display = 'none';
         }
         // Nach jedem Wechsel Button-Sichtbarkeit prüfen
         updateSwitchSearchBtnVisibility();
@@ -1256,14 +1258,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     updateSwitchSearchBtnVisibility();
-    // Fortschrittsbalken bei Startseite ausblenden
-    if (startSection && startSection.style.display !== 'none' && kriterienProgressBarContainer) {
-        kriterienProgressBarContainer.style.display = 'none';
-    }
-    // Falls bei initialem Laden eine Suchoption aktiv ist, den Balken entsprechend anzeigen/ausblenden
+    // Fortschrittsbalken: nur bei Kriterien-Suche sichtbar, sonst immer ausblenden
     if (kriterienSection && kriterienSection.style.display !== 'none' && kriterienProgressBarContainer) {
         kriterienProgressBarContainer.style.display = 'block';
-    } else if (filmtitelSection && filmtitelSection.style.display !== 'none' && kriterienProgressBarContainer) {
+    } else {
         kriterienProgressBarContainer.style.display = 'none';
     }
 });
