@@ -245,6 +245,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const headerSection = document.querySelector('header');
         headerSection.insertAdjacentElement('afterend', switchSearchBtn);
     }
+
+    // Dynamischer Header für aktive Suchoption
+    let activeSearchHeader = document.getElementById('activeSearchHeader');
+    if (!activeSearchHeader) {
+        activeSearchHeader = document.createElement('h2');
+        activeSearchHeader.id = 'activeSearchHeader';
+        activeSearchHeader.style.margin = '0.8em 0';
+        activeSearchHeader.style.fontSize = '1.4em';
+        activeSearchHeader.style.fontWeight = 'bold';
+        switchSearchBtn.insertAdjacentElement('afterend', activeSearchHeader);
+    }
+
+    function updateActiveSearchHeader() {
+        if (filmtitelSection.style.display !== 'none') {
+            activeSearchHeader.textContent = 'Suche nach Titel';
+        } else if (kriterienSection.style.display !== 'none') {
+            activeSearchHeader.textContent = 'Kriterien-Suche';
+        } else {
+            activeSearchHeader.textContent = '';
+        }
+    }
+
     // Klick-Event: wechsle zwischen filmtitelSection und kriterienSection
     switchSearchBtn.addEventListener('click', () => {
         // Wenn Filmtitel-Sektion sichtbar, zu Kriterien wechseln
@@ -261,6 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // Nach jedem Wechsel Button-Sichtbarkeit prüfen
         updateSwitchSearchBtnVisibility();
+        updateActiveSearchHeader();
     });
 
     // Funktion: Button nur anzeigen, wenn eine Suchoption gewählt ist (filmtitelSection oder kriterienSection sichtbar)
@@ -326,6 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         kriterienSection.style.display = 'none';
         kriterienProgressBarContainer.style.display = 'none';
         updateSwitchSearchBtnVisibility();
+        updateActiveSearchHeader();
     });
 
     kriterienBtn.addEventListener('click', () => {
@@ -335,7 +359,10 @@ document.addEventListener('DOMContentLoaded', () => {
         kriterienProgressBarContainer.style.display = 'block';
         showKriterienStep(0);
         updateSwitchSearchBtnVisibility();
+        updateActiveSearchHeader();
     });
+    // Initial setzen
+    updateActiveSearchHeader();
 
     const kriterienFields = ['actorDiv', 'genreDiv', 'yearDiv', 'typeDiv'];
     let currentKriterienStep = 0;
