@@ -1382,3 +1382,4 @@ function performSearch() {
     document.getElementById('kriterienSearchBtn').click();
   }
 }
+
