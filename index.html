@@ -6,39 +6,40 @@
     <title>Filmsuche</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
+
 <body>
     <div class="container my-4">
         <header class="mb-4">
             <h1>Finde deinen Film</h1>
-            <p>Suche nach einem Filmtitel oder entdecke Filme anhand deiner Kriterien.</p>
+            <p>Suche nach einem Film-/Serientitel ODER entdecke Filme/Serien anhand bestimmter Kriterien.</p>
         </header>
 
+        
+
         <section id="startSection" class="mb-3">
-            <button id="filmtitelBtn" class="btn btn-primary me-2">Suche nach Titel</button>
-            <button id="kriterienBtn" class="btn btn-secondary">Kriterien Suche</button>
+            <button id="filmtitelBtn" class="btn btn-dark me-2">Suche nach Titel</button>
+            <button id="kriterienBtn" class="btn btn-primary">Kriterien Suche</button>
         </section>
 
         <!-- Filmtitel-Suche als Formular -->
         <form id="filmtitelSection" style="display:none;" class="mb-3">
-            <input type="text" id="filmtitelInput" placeholder="Titel eingeben" class="form-control mb-2"/>
+            <input type="text" id="filmtitelInput" placeholder="Titel eingeben" class="form-control mb-4"/>
             <button id="filmtitelSearchBtn" type="submit" class="btn btn-success">Suchen</button>
         </form>
 
         <!-- Kriterien-Suche als Formular -->
         <form id="kriterienSection" style="display:none;" class="mb-3">
-            <div id="actorDiv" class="mb-2">
+            <div id="actorDiv" class="mb-4">
                 <label for="actorInput" class="form-label">Schauspieler:</label>
                 <input type="text" id="actorInput" placeholder="Name" class="form-control"/>
             </div>
-            <br>
-            <div id="genreDiv" style="display:none;" class="mb-2">
+            <div id="genreDiv" style="display:none;" class="mb-4">
                 <label for="genreSelect" class="form-label">Genre:</label>
                 <select id="genreSelect" class="form-select">
                     <option>Wähle Genre</option>
                 </select>
             </div>
-            <br>
-            <div id="yearDiv" style="display:none;" class="mb-2">
+            <div id="yearDiv" style="display:none;" class="mb-4">
                 <label for="yearFrom" class="form-label">Jahr von:</label>
                 <input type="range" id="yearFrom" min="1900" max="2040" value="1900" class="form-range"/>
                 <span id="yearFromValue">1900</span>
@@ -46,8 +47,7 @@
                 <input type="range" id="yearTo" min="1900" max="2040" value="2040" class="form-range"/>
                 <span id="yearToValue">2040</span>
             </div>
-            <br>
-            <div id="typeDiv" style="display:none;" class="mb-2">
+            <div id="typeDiv" style="display:none;" class="mb-4">
                 <label for="typeSelect" class="form-label">Typ:</label>
                 <select id="typeSelect" class="form-select">
                     <option>Wähle Typ</option>
