@@ -1,119 +1,276 @@
-/* Flexbox Container für Karten */
-.cards-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: flex-start;
-}
-
-/* Desktop Breakpoint */
-@media (min-width: 1000px) {
-    .cards-container {
-        justify-content: flex-start;
-        flex-wrap: wrap;
-    }
-    .media-card {
-        flex-direction: column;
-        width: 300px;
-        margin-right: 1rem;
-        margin-bottom: 1rem;
-    }
-    .media-card img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-}
-
-/* Einzelne Karten */
+/* --- Allgemeine Styles für Karten --- */
+/* --- Medienkarte als Grid --- */
 .media-card {
-    display: block;
-    width: 100%;
-    margin-bottom: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: "poster info";
+    align-items: stretch;
+    margin-bottom: 1em;
+    background-color: white;
+    position: relative;
+    overflow: visible;
+    padding: 0; /* Remove default padding, will be handled below */
 }
 
+.media-card:nth-child(even) {
+    background-color: transparent;
+}
+.media-card:nth-child(even)::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1em 0;
+    background: #f0f0f0;
+    border-radius: 8px;
+    z-index: 0;
+}
 
-/* Poster- und Info-Bereich */
 .card-poster {
-    display: block;
+    grid-area: poster;
     width: 100%;
+    height: auto;
+    object-fit: cover;
+    cursor: pointer;
+    margin-bottom: 1em; /* Abstand zwischen Poster und Info konsistent */
+    margin-right: 3em; /* Abstand zwischen Poster und Info erhöht */
+    align-self: stretch;
+    position: relative;
+    z-index: 1;
+    padding-top: 1.2em; /* Mehr Luft oben */
+    padding-bottom: 1.2em; /* Mehr Luft unten */
+    padding-left: 1.2em;
+    padding-right: 0;
+    box-sizing: border-box;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
 }
+
 .card-poster img {
     width: 100%;
     height: auto;
     display: block;
 }
+
 .card-info {
-    width: 100%;
-    margin-top: 0.5rem;
+    grid-area: info;
+    padding: 1.2em 1.6em 1.2em 0.5em; /* Linkes Padding erhöht für mehr Abstand */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    position: relative;
+    z-index: 1;
 }
 
-/* Tablet Breakpoint: 576px bis 999px */
-@media (min-width: 576px) and (max-width: 999px) {
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+    justify-content: flex-start;
+}
+
+/* --- Breakpoint: Tablet 570px bis 999px --- */
+@media (min-width: 570px) and (max-width: 999px) {
+    .media-card {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+            "poster"
+            "info";
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1em;
+        background-color: white;
+        position: relative;
+        overflow: visible;
+        padding: 0;
+    }
+    .media-card:nth-child(even) {
+        background-color: transparent;
+    }
+    .media-card:nth-child(even)::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 1em 0;
+        background: #f0f0f0;
+        border-radius: 8px;
+        z-index: 0;
+    }
+    .card-poster {
+        width: 60%;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1em; /* Abstand zwischen Poster und Info konsistent */
+        display: block;
+        object-fit: cover;
+        height: auto;
+        position: relative;
+        z-index: 1;
+        padding-top: 1.2em;
+        padding-bottom: 0.5em;
+        padding-left: 1.2em;
+        padding-right: 1.5em; /* Rechts-Padding erhöht für mehr Abstand */
+        box-sizing: border-box;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: hidden;
+    }
+    .card-poster img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .card-info {
+        padding: 0.5em 1.2em 1.2em 1.5em; /* Linkes Padding erhöht für mehr Abstand */
+        position: relative;
+        z-index: 1;
+    }
+    .cards-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 2em;
+    }
+}
+
+/* --- Breakpoint: Mobile bis 569px --- */
+@media (max-width: 569px) {
+    .media-card {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto;
+        grid-template-areas:
+            "poster"
+            "info";
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+        margin-bottom: 1em;
+        background-color: white;
+        position: relative;
+        overflow: visible;
+        padding: 0;
+    }
+    .media-card:nth-child(even) {
+        background-color: transparent;
+    }
+    .media-card:nth-child(even)::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 1em 0;
+        background: #f0f0f0;
+        border-radius: 8px;
+        z-index: 0;
+    }
+    .card-poster {
+        width: 100%;
+        margin-bottom: 1em; /* Abstand zwischen Poster und Info konsistent */
+        margin-right: 0;
+        margin-left: 0;
+        display: block;
+        object-fit: cover;
+        height: auto;
+        position: relative;
+        z-index: 1;
+        padding-top: 1em;
+        padding-bottom: 0.5em;
+        padding-left: 0.5em;
+        padding-right: 0.8em; /* Rechts-Padding erhöht für mehr Abstand */
+        box-sizing: border-box;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: hidden;
+    }
+    .card-poster img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .card-info {
+        padding: 0.5em 0.5em 1.2em 0.8em; /* Linkes Padding erhöht für mehr Abstand */
+        position: relative;
+        z-index: 1;
+    }
+    .cards-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 2em;
+    }
+}
+
+/* --- Breakpoint: Desktop ab 1000px --- */
+@media (min-width: 1000px) {
+    .media-card {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        grid-template-rows: 1fr;
+        grid-template-areas: "poster info";
+        align-items: stretch;
+        margin-bottom: 1em;
+        background-color: white;
+        position: relative;
+        overflow: visible;
+        padding: 0;
+    }
+    .media-card:nth-child(even) {
+        background-color: transparent;
+    }
+    .media-card:nth-child(even)::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 1em 0;
+        background: #f0f0f0;
+        border-radius: 8px;
+        z-index: 0;
+    }
+    .card-poster {
+        width: 100%;
+        margin-bottom: 1em; /* Abstand zwischen Poster und Info konsistent */
+        margin-right: 3.5em; /* Deutlicherer Abstand zwischen Poster und Info */
+        display: block;
+        object-fit: cover;
+        height: auto;
+        position: relative;
+        z-index: 1;
+        padding-top: 1.5em;
+        padding-bottom: 1.5em;
+        padding-left: 1.5em;
+        padding-right: 0;
+        box-sizing: border-box;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: hidden;
+    }
+    .card-poster img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .card-info {
+        padding: 1.5em 2em 1.5em 1em; /* Linkes Padding erhöht, damit Text nicht direkt am Poster klebt */
+        position: relative;
+        z-index: 1;
+    }
     .cards-container {
         display: flex;
         flex-wrap: wrap;
-        gap: 1rem;
+        gap: 2em;
         justify-content: flex-start;
-    }
-    .media-card {
-        display: flex;
-        flex-direction: column;
-        max-width: 300px;
-        margin-bottom: 1rem;
-        width: 100%;
-    }
-    .card-poster {
-        width: 100%;
-    }
-    .card-poster img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-    .card-info {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-}
-
-/* Mobile Breakpoint: bis 575px */
-@media (max-width: 575px) {
-    .cards-container {
-        display: block;
-        justify-content: flex-start;
-        flex-wrap: nowrap;
-    }
-    .media-card {
-        display: block;
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-    .card-poster {
-        width: 100%;
-    }
-    .card-poster img {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-    .card-info {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-}
-
-/* Extra-Small Mobile Breakpoint */
-@media (max-width: 400px) {
-    .media-card {
-        width: 90%;
-        max-width: none;
-        margin-left: auto;
-        margin-right: auto;
-        margin-bottom: 1rem;
-        display: block;
-    }
-    .card-poster {
-        width: 100%;
+        align-items: stretch;
     }
 }

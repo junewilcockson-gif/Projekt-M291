@@ -872,9 +872,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const posterUrl = (typeof item.poster_path === 'string' && item.poster_path.trim() !== '') ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
                         // click handler for detail view via data-item attribute
                         const itemJson = encodeURIComponent(JSON.stringify(item));
-                        return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;" data-item="${itemJson}">
-                            <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer">
-                            <div class="card-info" style="flex: 1; padding: 0 1em; display: flex; flex-direction: column; justify-content: flex-start;">
+                        return `<div class="media-card" data-item="${itemJson}">
+                            <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="cursor:pointer; border-radius: 4px;">
+                            <div class="card-info">
                                 <div style="margin-bottom: 0.3em;">
                                     <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer">${title}</div>
                                 </div>
@@ -1131,9 +1131,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             const posterUrl = (typeof item.poster_path === 'string' && item.poster_path.trim() !== '') ? `https://image.tmdb.org/t/p/w185${item.poster_path}` : 'assets/placeholder_film.png';
                             // click handler for detail view via data-item attribute
                             const itemJson = encodeURIComponent(JSON.stringify(item));
-                            return `<div class="media-card" style="display: flex; flex-direction: row; align-items: stretch; margin-bottom: 1em;" data-item="${itemJson}">
-                                <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="width: 25%; height: auto; object-fit: cover; flex-shrink: 0; border-radius: 4px; cursor:pointer">
-                                <div class="card-info" style="flex: 1; padding: 0 1em; display: flex; flex-direction: column; justify-content: flex-start;">
+                            return `<div class="media-card" data-item="${itemJson}">
+                                <img src="${posterUrl}" alt="Poster von ${title}" class="card-poster" style="cursor:pointer; border-radius: 4px;">
+                                <div class="card-info">
                                     <div style="margin-bottom: 0.3em;">
                                         <div class="card-title" style="font-weight:bold;font-size:1.25em;line-height:1.1; cursor:pointer">${title}</div>
                                     </div>
@@ -1586,34 +1586,3 @@ function performSearch() {
     document.getElementById('kriterienSearchBtn').click();
   }
 }
-
-/*
-========================
-F5 – UX-Honigwabe (Notizen)
-========================
-
-✔ Sichtbarkeit
-- Lade-GIF bei API-Aufrufen zeigt, dass etwas passiert
-- Fortschrittsbalken bei der Kriterien-Suche zeigt den aktuellen Schritt
-- Ergebnisse werden klar als Karten dargestellt
-
-✔ Feedback
-- Rote Markierung bei fehlerhaften Eingaben
-- Warnmeldungen mit Text und Symbol
-- Sofortiges Feedback bei Klicks (Progressbar, Laden, Ergebnisse)
-
-✔ Navigation
-- Startseite mit klarer Wahl zwischen Sucharten
-- Schritt-für-Schritt-Führung bei der Kriterien-Suche
-- Detailansicht als Overlay, Rückkehr ohne Seitenwechsel
-
-✔ Zugänglichkeit & Zuverlässigkeit
-- Fehlermeldungen mit role="alert" für Screenreader
-- Klare Texte, einfache Sprache
-- Fehlertoleranz bei leeren oder fehlenden Daten
-
-✔ Begehrenswert & Wertvoll
-- Ansprechendes Kartenlayout mit Postern
-- Detailansicht mit zusätzlichen Infos
-- Einheitliches Design durch Bootstrap
-*/
