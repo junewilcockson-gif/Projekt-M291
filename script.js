@@ -1598,16 +1598,14 @@ function renderPaginationControls() {
   container.appendChild(nextBtn);
 }
 
-// Helper to trigger the correct search for pagination
-function performSearch() {
-  // Try to detect which search section is visible and trigger the respective search
-  const filmtitelSection = document.getElementById('filmtitelSection');
-  const kriterienSection = document.getElementById('kriterienSection');
-  if (filmtitelSection && filmtitelSection.style.display !== 'none') {
-    // Trigger filmtitel search
-    document.getElementById('filmtitelSearchBtn').click();
-  } else if (kriterienSection && kriterienSection.style.display !== 'none') {
-    // Trigger kriterien search
-    document.getElementById('kriterienSearchBtn').click();
-  }
+// --- Anpassung: Karten-Layout per JS nicht mehr überschreiben ---
+// Die Funktion adjustCardLayout und observeCardRenders werden leer gelassen,
+// um eventuelle spätere Anpassungen zu ermöglichen, aber sie ändern keine Styles mehr.
+
+function adjustCardLayout() {
+    // Keine Layout-Änderungen mehr per JS, alles über CSS.
+}
+
+function observeCardRenders() {
+    // Keine Style- oder DOM-Umsortierungen mehr, alles über CSS.
 }

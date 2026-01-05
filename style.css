@@ -48,6 +48,12 @@
     border-radius: 0;
     box-shadow: none;
     overflow: hidden;
+    transition: transform 0.3s ease; /* sanfte Animation beim Hover */
+}
+
+.card-poster:hover {
+    transform: scale(1.05); /* leicht vergrößern */
+    cursor: pointer; /* Cursor zeigt Klickbarkeit */
 }
 
 .card-poster img {
@@ -275,3 +281,18 @@
     }
 }
 
+
+
+/* Fade-In Animation für Schritte */
+.step {
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: opacity 0.5s ease, max-height 0.5s ease;
+    display: block;
+}
+
+.step.show {
+    opacity: 1;
+    max-height: 1000px;
+}
