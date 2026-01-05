@@ -1,0 +1,119 @@
+/* Flexbox Container für Karten */
+.cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: flex-start;
+}
+
+/* Desktop Breakpoint */
+@media (min-width: 1000px) {
+    .cards-container {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+    .media-card {
+        flex-direction: column;
+        width: 300px;
+        margin-right: 1rem;
+        margin-bottom: 1rem;
+    }
+    .media-card img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+}
+
+/* Einzelne Karten */
+.media-card {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+
+/* Poster- und Info-Bereich */
+.card-poster {
+    display: block;
+    width: 100%;
+}
+.card-poster img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.card-info {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+/* Tablet Breakpoint: 576px bis 999px */
+@media (min-width: 576px) and (max-width: 999px) {
+    .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: flex-start;
+    }
+    .media-card {
+        display: flex;
+        flex-direction: column;
+        max-width: 300px;
+        margin-bottom: 1rem;
+        width: 100%;
+    }
+    .card-poster {
+        width: 100%;
+    }
+    .card-poster img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .card-info {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Mobile Breakpoint: bis 575px */
+@media (max-width: 575px) {
+    .cards-container {
+        display: block;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+    }
+    .media-card {
+        display: block;
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .card-poster {
+        width: 100%;
+    }
+    .card-poster img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    .card-info {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+/* Extra-Small Mobile Breakpoint */
+@media (max-width: 400px) {
+    .media-card {
+        width: 90%;
+        max-width: none;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    .card-poster {
+        width: 100%;
+    }
+}
