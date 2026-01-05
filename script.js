@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Request-ID für Genre-Requests (Race Condition Absicherung)
     let genreRequestId = 0;
     // Genre-Liste dynamisch laden (wird auch bei Typwechsel neu geladen)
-    async function loadGenres(type) {
+    async function loadGenres(type, selectedGenre = '') {
         const currentRequestId = ++genreRequestId;
 
         genreSelect.disabled = true;
@@ -489,11 +489,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             url = `https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=de-DE`;
         }
+
         try {
             const resp = await fetch(url);
             if (!resp.ok) throw new Error('Genres konnten nicht geladen werden.');
             const data = await resp.json();
             if (currentRequestId !== genreRequestId) return;
+
             genreSelect.innerHTML = '<option value="">Wähle Genre</option>';
             if (data.genres && Array.isArray(data.genres)) {
                 data.genres.forEach(g => {
@@ -503,6 +505,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     genreSelect.appendChild(opt);
                 });
             }
+
+            // Alten Wert wieder auswählen, falls noch vorhanden
+            if (selectedGenre) {
+                const exists = Array.from(genreSelect.options)
+                    .some(opt => opt.value === selectedGenre.toString());
+                if (exists) {
+                    genreSelect.value = selectedGenre.toString();
+                }
+            }
+
             genreSelect.disabled = false;
         } catch (e) {
             genreSelect.innerHTML = '<option value="">Genres nicht verfügbar</option>';
@@ -543,17 +555,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!typeSelect.value) return;
 
             const val = typeSelect.value;
+
+            // Vorher gewähltes Genre merken
             const previousGenre = genreSelect.value;
 
-            await loadGenres(val);
-
-            if (previousGenre) {
-                const exists = Array.from(genreSelect.options)
-                    .some(opt => opt.value === previousGenre);
-                if (exists) {
-                    genreSelect.value = previousGenre;
-                }
-            }
+            // Lade die Genres asynchron
+            await loadGenres(val, previousGenre);
         });
         // Genre-Dropdown initial beim Start mit Film-Genres füllen
         loadGenres('movie');
