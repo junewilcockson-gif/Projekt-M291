@@ -1535,33 +1535,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- Pagination controls rendering ---
 function renderPaginationControls() {
-  const container = document.getElementById("pagination");
-  if (!container) return;
+  // Find correct result container and insert pagination there
+  let container = document.getElementById("pagination");
+  let insertAfterEl = null;
+  // Try to find where to insert: after filmtitelResults or kriterienResults
+  const filmtitelResults = document.getElementById('filmtitelResults');
+  const kriterienResults = document.getElementById('kriterienResults');
+  // Remove any existing pagination container
+  if (container && container.parentNode) {
+    container.parentNode.removeChild(container);
+    container = null;
+  }
+  // Insert after the visible results
+  if (filmtitelResults && filmtitelResults.offsetParent !== null) {
+    insertAfterEl = filmtitelResults;
+  } else if (kriterienResults && kriterienResults.offsetParent !== null) {
+    insertAfterEl = kriterienResults;
+  }
+  if (!insertAfterEl) return;
+  // Create pagination container
+  container = document.createElement("div");
+  container.id = "pagination";
+  container.style.textAlign = "center";
+  container.style.margin = "1.5em 0 0.5em 0";
+  insertAfterEl.insertAdjacentElement('afterend', container);
 
+  // Clear container
   container.innerHTML = "";
 
   const prevBtn = document.createElement("button");
   prevBtn.textContent = "← Vorherige Seite";
   prevBtn.disabled = currentPage <= 1;
   prevBtn.className = "btn btn-outline-secondary me-2";
-  prevBtn.onclick = () => {
-    if (currentPage > 1) {
-      isPaginating = true;
-      currentPage--;
-      performSearch();
-    }
+  prevBtn.onclick = (e) => {
+      e.preventDefault();
+      if (currentPage > 1) {
+          isPaginating = true;
+          currentPage--;
+          performSearch();
+      }
   };
 
   const nextBtn = document.createElement("button");
   nextBtn.textContent = "Nächste Seite →";
   nextBtn.disabled = currentPage >= totalPages;
   nextBtn.className = "btn btn-outline-secondary ms-2";
-  nextBtn.onclick = () => {
-    if (currentPage < totalPages) {
-      isPaginating = true;
-      currentPage++;
-      performSearch();
-    }
+  nextBtn.onclick = (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages) {
+          isPaginating = true;
+          currentPage++;
+          performSearch();
+      }
   };
 
   const info = document.createElement("span");
